@@ -1,5 +1,6 @@
 use crate::error::OperationError;
 
+mod command_builder;
 mod command_runner;
 mod error;
 mod input_handler;
@@ -20,24 +21,28 @@ fn print_menu() {
     println!("2. Zip file or directory.");
     println!("3. Zip and secure with password.");
     println!("4. Tar file or directory.");
-    println!("9. Print menu.");
     println!("0. Exit program.");
 }
 
 fn handle_menu_option(option: i32) {
-    let result = match option {
-        1 => command_runner::unpack(),
-        2 => command_runner::zip(),
-        3 => command_runner::zip_with_password(),
-        4 => command_runner::tar(),
-        9 => {
-            print_menu();
-            Ok(())
-        }
+    let command = match option {
+        1 => command_builder::unpack(),
+        2 => command_builder::zip(),
+        3 => command_builder::zip_with_password(),
+        4 => command_builder::tar(),
         0 => std::process::exit(0),
         _ => Err(OperationError::InvalidCommand.into()),
     };
-    if result.is_err() {
-        eprintln!("{}", result.unwrap_err());
+
+    match command {
+        Ok(cmd) => {
+            let r = command_runner::run_command(&cmd);
+            if r.is_err() {
+                eprintln!("Failed to run command '{cmd}': {:?}", r.unwrap_err());
+            }
+        }
+        Err(error) => {
+            eprintln!("{error}");
+        }
     }
 }

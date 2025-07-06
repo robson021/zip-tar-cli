@@ -18,16 +18,15 @@ pub fn read_int() -> Result<i32, ParseIntError> {
 
 pub fn read_path_to_archive() -> Result<String, Box<dyn Error>> {
     println!("Provide archive path (e.g. /some/directory/my_file.zip):");
-    let r = read_path_and_check_it_exists()?;
-    if r.is_directory {
-        Err(Box::new(OperationError::ArchiveIsDirectory))
-    } else {
-        Ok(r.path)
+    let file_metadata = read_path_and_check_it_exists()?;
+    match file_metadata.is_directory {
+        false => Ok(file_metadata.path),
+        true => Err(Box::new(OperationError::ArchiveIsDirectory)),
     }
 }
 
 pub fn read_path_to_file_or_directory() -> Result<FileMetadata, Box<dyn Error>> {
-    println!("Provide file or director path (e.g. /some/directory/my_file.zip):");
+    println!("Provide file or director path (e.g. /some/directory/my_file.png):");
     read_path_and_check_it_exists()
 }
 
