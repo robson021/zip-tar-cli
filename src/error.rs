@@ -13,4 +13,7 @@ pub enum OperationError {
 
     #[error("Failed to run command: '{0}'.")]
     FailedToRunCommand(String),
+
+    #[error("Archive is a directory.")]
+    ArchiveIsDirectory,
 }
