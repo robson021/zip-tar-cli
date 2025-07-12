@@ -10,23 +10,16 @@ pub fn unpack() -> Result<String, Box<dyn Error>> {
     Ok(cmd)
 }
 
-pub fn zip() -> Result<String, Box<dyn Error>> {
-    let destination_archive = get_unique_archive_name();
-    let file_metadata = input_handler::read_path_to_file_or_directory()?;
-    let path = file_metadata.path;
-    let file_to_zip = match file_metadata.is_directory {
-        true => format!("{path}/*"),
-        false => path,
-    };
-    let cmd = format!("zip -r {destination_archive}.zip {file_to_zip}");
-    Ok(cmd)
-}
-
-pub fn zip_with_password() -> Result<String, Box<dyn Error>> {
+pub fn zip(with_password: bool) -> Result<String, Box<dyn Error>> {
     let destination_archive = get_unique_archive_name();
     let file_to_zip = read_files_to_be_archived()?;
-    let cmd = format!("zip -r {destination_archive}.zip {file_to_zip}");
-    Ok(format!("zip -er {cmd}"))
+    let encryption = match with_password {
+        true => "e",
+        false => "",
+    };
+    Ok(format!(
+        "zip -r{encryption} {destination_archive}.zip {file_to_zip}"
+    ))
 }
 
 pub fn tar() -> Result<String, Box<dyn Error>> {

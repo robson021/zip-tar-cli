@@ -27,8 +27,8 @@ fn print_menu() {
 fn handle_menu_option(option: i32) {
     let command = match option {
         1 => command_builder::unpack(),
-        2 => command_builder::zip(),
-        3 => command_builder::zip_with_password(),
+        2 => command_builder::zip(false),
+        3 => command_builder::zip(true),
         4 => command_builder::tar(),
         0 => std::process::exit(0),
         _ => Err(OperationError::InvalidCommand.into()),
