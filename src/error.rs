@@ -11,6 +11,9 @@ pub enum OperationError {
     #[error("Failed to check file existence in the path {0}.")]
     CouldNotCheckFile(String),
 
+    #[error("Could not find the directory for files with wildcard {0}.")]
+    CouldNotFindDirForFileWithWildcard(String),
+
     #[error("Failed to run command: '{0}'.")]
     FailedToRunCommand(String),
 

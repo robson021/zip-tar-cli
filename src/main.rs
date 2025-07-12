@@ -4,6 +4,7 @@ mod command_builder;
 mod command_runner;
 mod error;
 mod input_handler;
+mod string_utils;
 
 fn main() {
     loop {
