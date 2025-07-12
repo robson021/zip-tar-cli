@@ -2,8 +2,6 @@ use crate::input_handler;
 use std::error::Error;
 use uuid::Uuid;
 
-// todo: support wildcards like: ./some/path/*.png
-
 pub fn unpack() -> Result<String, Box<dyn Error>> {
     let file = input_handler::read_path_to_archive()?;
     let cmd = format!("tar -xvf {file}");

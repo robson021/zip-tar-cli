@@ -3,7 +3,6 @@ use std::error::Error;
 use std::num::ParseIntError;
 use std::path::Path;
 
-#[inline]
 fn read_string() -> String {
     let mut input = String::new();
     std::io::stdin()
@@ -39,9 +38,17 @@ pub struct FileMetadata {
     pub is_directory: bool,
 }
 
-#[inline]
 fn read_path_and_check_it_exists() -> Result<FileMetadata, Box<dyn Error>> {
     let path = read_string();
+    let has_wildcard = path.contains("*");
+    let path = match has_wildcard {
+        true => {
+            // todo: support wildcards like: ./some/path/*.png
+            todo!()
+        }
+        false => path,
+    };
+
     let p = Path::new(&path);
     match p.try_exists() {
         Ok(exists) => match exists {
