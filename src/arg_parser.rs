@@ -40,3 +40,45 @@ fn parse_cmd(action: &str, path: &str) -> Result<String, Box<dyn Error>> {
     };
     Ok(cmd)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const TEST_FILES: &str = "./resources/test";
+
+    #[test]
+    fn parse_decompress() {
+        for arg in ["-u", "--unpack", "-d", "--decompress"] {
+            let cmd = parse_cmd(arg, TEST_FILES).unwrap();
+            assert_eq!(cmd, format!("tar -xvf {TEST_FILES}"));
+        }
+    }
+
+    #[test]
+    fn parse_zip() {
+        for arg in ["-z", "--zip"] {
+            let cmd = parse_cmd(arg, TEST_FILES).unwrap();
+            assert!(cmd.starts_with("zip -r archive_"));
+            assert!(cmd.ends_with(&format!(".zip {TEST_FILES}")));
+        }
+    }
+
+    #[test]
+    fn parse_zip_encrypt() {
+        for arg in ["-ze", "-ez", "--zip_encrypt"] {
+            let cmd = parse_cmd(arg, TEST_FILES).unwrap();
+            assert!(cmd.starts_with("zip -re archive_"));
+            assert!(cmd.ends_with(&format!(".zip {TEST_FILES}")));
+        }
+    }
+
+    #[test]
+    fn parse_tar() {
+        for arg in ["-t", "--tar"] {
+            let cmd = parse_cmd(arg, TEST_FILES).unwrap();
+            assert!(cmd.starts_with("tar -cf archive_"));
+            assert!(cmd.ends_with(&format!(".tar {TEST_FILES}")));
+        }
+    }
+}
