@@ -5,26 +5,41 @@ use uuid::Uuid;
 
 pub fn unpack() -> Result<String, Box<dyn Error>> {
     let file = input_handler::read_path_to_archive()?;
-    let cmd = format!("tar -xvf {file}");
+    unpack_path(&file)
+}
+
+#[inline]
+pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
+    let cmd = format!("tar -xvf {path}");
     Ok(cmd)
 }
 
 pub fn zip(with_password: bool) -> Result<String, Box<dyn Error>> {
-    let destination_archive = get_unique_archive_name();
     let file_to_zip = read_files_to_be_archived()?;
+    zip_path(&file_to_zip, with_password)
+}
+
+#[inline]
+pub fn zip_path(path_to_files: &str, with_password: bool) -> Result<String, Box<dyn Error>> {
+    let destination_archive = get_unique_archive_name();
     let encryption = match with_password {
         true => "e",
         false => "",
     };
     Ok(format!(
-        "zip -r{encryption} {destination_archive}.zip {file_to_zip}"
+        "zip -r{encryption} {destination_archive}.zip {path_to_files}"
     ))
 }
 
 pub fn tar() -> Result<String, Box<dyn Error>> {
-    let destination_archive = get_unique_archive_name();
     let file_to_zip = read_files_to_be_archived()?;
-    let cmd = format!("tar -cf {destination_archive}.tar {file_to_zip}");
+    tar_path(&file_to_zip)
+}
+
+#[inline]
+pub fn tar_path(path: &str) -> Result<String, Box<dyn Error>> {
+    let destination_archive = get_unique_archive_name();
+    let cmd = format!("tar -cf {destination_archive}.tar {path}");
     Ok(cmd)
 }
 

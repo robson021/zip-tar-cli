@@ -5,12 +5,13 @@ mod arg_parser;
 mod command_builder;
 mod command_runner;
 mod error;
+mod file_handler;
 mod input_handler;
 mod string_utils;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    dbg!(&args);
+    // dbg!(&args);
 
     if args.len() > 1 {
         match arg_parser::parse_and_run(args) {
