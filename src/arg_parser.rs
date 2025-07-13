@@ -20,7 +20,7 @@ pub fn parse_and_run(cmd_args: Vec<String>) -> Result<(), Box<dyn Error>> {
     let metadata = file_handler::get_file_metadata(path)?;
     println!("Found file/directory: {metadata:?}.");
 
-    let cmd: String = parse_cmd(action, &metadata.path)?;
+    let cmd: String = parse_cmd(action, &metadata.to_string_path())?;
     command_runner::run_command(&cmd)?;
     Ok(())
 }
