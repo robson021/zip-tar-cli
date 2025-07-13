@@ -6,6 +6,7 @@ mod command_builder;
 mod command_runner;
 mod error;
 mod file_handler;
+mod file_metadata;
 mod input_handler;
 mod string_utils;
 
