@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub struct FileMetadata {
     pub path: String,
-    pub wildcard: Option<String>, //todo: use Option<String>
+    pub wildcard: Option<String>,
     pub is_directory: bool,
 }
 
