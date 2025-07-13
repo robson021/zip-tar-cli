@@ -6,11 +6,11 @@ use std::path::Path;
 
 pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>> {
     let has_wildcard = full_path.contains("*.");
-    let mut wildcard_value = String::new();
+    let mut wildcard_value = None;
     let path = match has_wildcard {
         true => {
             let dir = string_utils::find_dir_of_wildcard_files(full_path)?;
-            wildcard_value = full_path[dir.len() + 1..].to_owned();
+            wildcard_value = Some(full_path[dir.len() + 1..].to_owned());
             dir
         }
         false => full_path.to_owned(),
@@ -23,8 +23,7 @@ pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>
                 let metadata = FileMetadata {
                     path: path.to_owned(),
                     is_directory: p.is_dir(),
-                    has_wildcard,
-                    wildcard_value,
+                    wildcard: wildcard_value,
                 };
                 Ok(metadata)
             }
@@ -44,9 +43,8 @@ mod tests {
     fn should_get_metadata() {
         let metadata = get_file_metadata(TEST_FILES).unwrap();
         assert!(metadata.is_directory);
-        assert!(!metadata.has_wildcard);
+        assert!(metadata.wildcard.is_none());
         assert_eq!(metadata.path, TEST_FILES);
-        assert_eq!(metadata.wildcard_value, "");
     }
 
     #[test]
@@ -54,8 +52,7 @@ mod tests {
         let path = format!("{TEST_FILES}/*.txt");
         let metadata = get_file_metadata(&path).unwrap();
         assert!(metadata.is_directory);
-        assert!(metadata.has_wildcard);
         assert_eq!(metadata.path, TEST_FILES);
-        assert_eq!(metadata.wildcard_value, "*.txt");
+        assert_eq!(metadata.wildcard.unwrap(), "*.txt");
     }
 }

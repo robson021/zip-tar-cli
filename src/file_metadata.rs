@@ -1,9 +1,8 @@
 #[derive(Debug)]
 pub struct FileMetadata {
     pub path: String,
-    pub wildcard_value: String,
+    pub wildcard: Option<String>, //todo: use Option<String>
     pub is_directory: bool,
-    pub has_wildcard: bool,
 }
 
 impl FileMetadata {
@@ -21,12 +20,9 @@ fn get_from_dir(metadata: &FileMetadata) -> String {
         panic!("Not a directory: {metadata:?}");
     }
     let path = &metadata.path;
-    match metadata.has_wildcard {
-        true => {
-            let wildcard = &metadata.wildcard_value;
-            format!("{path}/{wildcard}")
-        }
-        false => format!("{path}/*"),
+    match &metadata.wildcard {
+        None => format!("{path}/*"),
+        Some(wildcard) => format!("{path}/{wildcard}"),
     }
 }
 
@@ -38,9 +34,8 @@ mod tests {
     fn get_dir_with_no_wildcard() {
         let path = get_from_dir(&FileMetadata {
             path: String::from("/some/test/path"),
-            wildcard_value: String::from(""),
+            wildcard: None,
             is_directory: true,
-            has_wildcard: false,
         });
         assert_eq!(path, "/some/test/path/*");
     }
@@ -49,9 +44,8 @@ mod tests {
     fn get_dir_with_wildcard() {
         let path = get_from_dir(&FileMetadata {
             path: String::from("/some/test/path"),
-            wildcard_value: String::from("*.txt"),
+            wildcard: Some(String::from("*.txt")),
             is_directory: true,
-            has_wildcard: true,
         });
         assert_eq!(path, "/some/test/path/*.txt");
     }
