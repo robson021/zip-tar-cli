@@ -44,7 +44,7 @@ pub struct FileMetadata {
     pub has_wildcard: bool,
 }
 
-fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>> {
+pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>> {
     let has_wildcard = full_path.contains("*.");
     let mut wildcard_value = String::new();
     let path = match has_wildcard {

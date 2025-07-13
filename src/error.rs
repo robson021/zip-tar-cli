@@ -19,4 +19,7 @@ pub enum OperationError {
 
     #[error("Archive is a directory.")]
     ArchiveIsDirectory,
+
+    #[error("Unknown argument {0}.")]
+    InvalidArgument(String),
 }

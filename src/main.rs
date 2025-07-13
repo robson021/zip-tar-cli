@@ -1,5 +1,7 @@
 use crate::error::OperationError;
+use std::env;
 
+mod arg_parser;
 mod command_builder;
 mod command_runner;
 mod error;
@@ -7,11 +9,20 @@ mod input_handler;
 mod string_utils;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    dbg!(&args);
+
+    if args.len() > 1 {
+        match arg_parser::parse_and_run(args) {
+            Ok(_) => std::process::exit(0),
+            Err(e) => eprintln!("{e}"),
+        }
+    }
     loop {
         print_menu();
         match input_handler::read_int() {
             Ok(option) => handle_menu_option(option),
-            Err(_) => println!("Invalid option. A number was expected."),
+            Err(_) => eprintln!("Invalid option. A number was expected."),
         };
     }
 }
