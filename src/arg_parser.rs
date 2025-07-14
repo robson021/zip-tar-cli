@@ -1,5 +1,6 @@
 use crate::command_builder::tar_path;
 use crate::error::OperationError;
+use crate::file_metadata::FileMetadata;
 use crate::{command_builder, command_runner, file_handler};
 use command_builder::{unpack_path, zip_path};
 use std::error::Error;
@@ -13,9 +14,8 @@ pub fn parse_and_run(cmd_args: Vec<String>) -> Result<(), Box<dyn Error>> {
     let path = &cmd_args[2];
 
     let metadata = file_handler::get_file_metadata(path)?;
-    println!("Found file/directory: {metadata:?}.");
 
-    let cmd: String = parse_cmd(action, &metadata.to_string_path())?;
+    let cmd: String = parse_cmd(action, &metadata)?;
     command_runner::run_command(&cmd)?;
     Ok(())
 }
@@ -32,12 +32,12 @@ fn validate_number_of_args(number_of_args: usize) -> Result<(), Box<dyn Error>> 
 }
 
 #[inline]
-fn parse_cmd(action: &str, path: &str) -> Result<String, Box<dyn Error>> {
+fn parse_cmd(action: &str, metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
     let cmd = match action {
-        "-x" | "-u" | "--unpack" | "-d" | "--decompress" => unpack_path(path)?,
-        "-z" | "--zip" => zip_path(path, false)?,
-        "-ze" | "-ez" | "--zip_encrypt" => zip_path(path, true)?,
-        "-t" | "--tar" => tar_path(path)?,
+        "-x" | "-u" | "--unpack" | "-d" | "--decompress" => unpack_path(&metadata.path)?,
+        "-z" | "--zip" => zip_path(metadata, false)?,
+        "-ze" | "-ez" | "--zip_encrypt" => zip_path(metadata, true)?,
+        "-t" | "--tar" => tar_path(metadata)?,
         _ => {
             return Err(
                 OperationError::InvalidArgument(format!("Invalid argument {action}.")).into(),
@@ -50,13 +50,22 @@ fn parse_cmd(action: &str, path: &str) -> Result<String, Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use lazy_static::lazy_static;
 
     const TEST_FILES: &str = "./resources/test";
+
+    lazy_static! {
+        static ref TEST_METADATA: FileMetadata = FileMetadata {
+            path: TEST_FILES.to_owned(),
+            wildcard: None,
+            is_directory: true,
+        };
+    }
 
     #[test]
     fn parse_decompress() {
         for arg in ["-u", "--unpack", "-d", "--decompress", "-x"] {
-            let cmd = parse_cmd(arg, TEST_FILES).unwrap();
+            let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
             assert_eq!(cmd, format!("tar -xvf {TEST_FILES}"));
         }
     }
@@ -64,27 +73,27 @@ mod tests {
     #[test]
     fn parse_zip() {
         for arg in ["-z", "--zip"] {
-            let cmd = parse_cmd(arg, TEST_FILES).unwrap();
-            assert!(cmd.starts_with("zip -r archive_"));
-            assert!(cmd.ends_with(&format!(".zip {TEST_FILES}")));
+            let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
+            assert!(cmd.starts_with("zip -r test_archive"));
+            assert!(cmd.ends_with(&format!(".zip {TEST_FILES}/*")));
         }
     }
 
     #[test]
     fn parse_zip_encrypt() {
         for arg in ["-ze", "-ez", "--zip_encrypt"] {
-            let cmd = parse_cmd(arg, TEST_FILES).unwrap();
-            assert!(cmd.starts_with("zip -re archive_"));
-            assert!(cmd.ends_with(&format!(".zip {TEST_FILES}")));
+            let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
+            assert!(cmd.starts_with("zip -re test_archive"));
+            assert!(cmd.ends_with(&format!(".zip {TEST_FILES}/*")));
         }
     }
 
     #[test]
     fn parse_tar() {
         for arg in ["-t", "--tar"] {
-            let cmd = parse_cmd(arg, TEST_FILES).unwrap();
-            assert!(cmd.starts_with("tar -cf archive_"));
-            assert!(cmd.ends_with(&format!(".tar {TEST_FILES}")));
+            let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
+            assert!(cmd.starts_with("tar -cf test_archive"));
+            assert!(cmd.ends_with(&format!(".tar {TEST_FILES}/*")));
         }
     }
 }

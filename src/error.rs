@@ -22,4 +22,7 @@ pub enum OperationError {
 
     #[error("Unknown argument {0}.")]
     InvalidArgument(String),
+
+    #[error("Could not spit the path: '{0}'.")]
+    CouldNotSpitPath(String),
 }

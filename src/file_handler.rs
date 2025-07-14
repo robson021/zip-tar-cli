@@ -25,6 +25,7 @@ pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>
                     is_directory: p.is_dir(),
                     wildcard: wildcard_value,
                 };
+                println!("Found file/directory: {metadata:?}.");
                 Ok(metadata)
             }
             false => Err(OperationError::FileDoesNotExist.into()),
