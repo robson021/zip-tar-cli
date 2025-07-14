@@ -30,12 +30,13 @@ fn main() {
 }
 
 fn print_menu() {
-    println!("\nChose an option:");
-    println!("1. Unpack archive.");
-    println!("2. Zip file or directory.");
-    println!("3. Zip and secure with password.");
-    println!("4. Tar file or directory.");
-    println!("0. Exit program.");
+    let menu = "\nChose an option:\
+    \n1. Unpack archive.\
+    \n2. Zip file or directory.\
+    \n3. Zip and secure with password.\
+    \n4. Tar file or directory.\
+    \n0. Exit program.";
+    println!("{menu}");
 }
 
 fn handle_menu_option(option: i32) {
