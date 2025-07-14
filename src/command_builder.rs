@@ -13,6 +13,7 @@ pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
     Ok(cmd)
 }
 
+#[inline]
 pub fn zip(with_password: bool) -> Result<String, Box<dyn Error>> {
     let file_metadata = input_handler::read_path_to_file_or_directory()?;
     zip_path(&file_metadata, with_password)
@@ -31,6 +32,7 @@ pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String, 
     ))
 }
 
+#[inline]
 pub fn tar() -> Result<String, Box<dyn Error>> {
     let file_metadata = input_handler::read_path_to_file_or_directory()?;
     tar_path(&file_metadata)
