@@ -25,4 +25,9 @@ pub enum OperationError {
 
     #[error("Could not spit the path: '{0}'.")]
     CouldNotSpitPath(String),
+
+    #[error(
+        "Wildcard is only supported at the end of a path - e.g. './my/path/file*' or './my/path/.*txt'"
+    )]
+    InvalidWildcardIndex,
 }

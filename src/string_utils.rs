@@ -2,10 +2,23 @@ use crate::error::OperationError;
 use std::error::Error;
 
 pub fn find_dir_of_wildcard_files(path: &str) -> Result<String, Box<dyn Error>> {
-    match path.find("*.") {
-        Some(index) => Ok(path[..index - 1].to_owned()),
+    match last_index_of_char(path, '/') {
+        Some(slash_idx) => {
+            let wildcard_idx = last_index_of_char(path, '*').unwrap();
+            if wildcard_idx < slash_idx {
+                return Err(OperationError::InvalidWildcardIndex.into());
+            }
+            Ok(path[..slash_idx].to_owned())
+        }
         None => Err(OperationError::CouldNotFindDirForFileWithWildcard(path.to_owned()).into()),
     }
+}
+
+fn last_index_of_char(s: &str, to_find: char) -> Option<usize> {
+    s.chars()
+        .rev()
+        .position(|c| c == to_find)
+        .map(|rev_pos| s.chars().count() - rev_pos - 1)
 }
 
 #[cfg(test)]
@@ -14,7 +27,16 @@ mod tests {
 
     #[test]
     fn should_find_dir_of_wildcard_files() {
+        let dir = find_dir_of_wildcard_files("/foo/bar/path/file*").unwrap();
+        assert_eq!(dir, "/foo/bar/path");
+
         let dir = find_dir_of_wildcard_files("/foo/bar/path/*.txt").unwrap();
         assert_eq!(dir, "/foo/bar/path");
+    }
+
+    #[test]
+    fn should_fail_for_invalid_wildcard_index() {
+        let dir = find_dir_of_wildcard_files("/foo/bar/*/file.txt");
+        assert!(dir.is_err());
     }
 }

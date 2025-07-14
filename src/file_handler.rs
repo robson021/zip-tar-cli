@@ -5,7 +5,7 @@ use std::error::Error;
 use std::path::Path;
 
 pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>> {
-    let has_wildcard = full_path.contains("*.");
+    let has_wildcard = full_path.contains("*");
     let mut wildcard_value = None;
     let path = match has_wildcard {
         true => {
@@ -49,11 +49,29 @@ mod tests {
     }
 
     #[test]
-    fn should_get_metadata_with_wildcard() {
+    fn should_get_metadata_with_wildcard_file_extension() {
         let path = format!("{TEST_FILES}/*.txt");
         let metadata = get_file_metadata(&path).unwrap();
         assert!(metadata.is_directory);
         assert_eq!(metadata.path, TEST_FILES);
         assert_eq!(metadata.wildcard.unwrap(), "*.txt");
+    }
+
+    #[test]
+    fn should_get_metadata_with_wildcard_file_name() {
+        let path = format!("{TEST_FILES}/some_file*");
+        let metadata = get_file_metadata(&path).unwrap();
+        assert!(metadata.is_directory);
+        assert_eq!(metadata.path, TEST_FILES);
+        assert_eq!(metadata.wildcard.unwrap(), "some_file*");
+    }
+
+    #[test]
+    fn should_get_metadata_with_double_wildcard_file_name() {
+        let path = format!("{TEST_FILES}/*some_file*");
+        let metadata = get_file_metadata(&path).unwrap();
+        assert!(metadata.is_directory);
+        assert_eq!(metadata.path, TEST_FILES);
+        assert_eq!(metadata.wildcard.unwrap(), "*some_file*");
     }
 }
