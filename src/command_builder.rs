@@ -1,5 +1,5 @@
 use crate::file_metadata::FileMetadata;
-use crate::input_handler;
+use crate::{input_handler, string_utils};
 use std::error::Error;
 
 pub fn unpack() -> Result<String, Box<dyn Error>> {
@@ -49,4 +49,17 @@ pub fn tar_path(metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
 #[inline]
 fn get_unique_archive_name(short_name: &str) -> String {
     format!("{short_name}_archive")
+}
+
+pub(crate) fn add_to_exising_archive() -> Result<String, Box<dyn Error>> {
+    print!("Let's find existing archive. ");
+    let archive = input_handler::read_path_to_archive()?;
+    let ext = string_utils::find_file_extension(&archive)?;
+    print!("What do you want to add to the exising {ext} archive? ");
+    let files = input_handler::read_path_to_file_or_directory()?.to_string_path();
+    let cmd = match ext.as_str() {
+        ".zip" => format!("zip -ur {archive} {files}"),
+        _ => format!("tar -rv --append --file={archive} {files}"),
+    };
+    Ok(cmd)
 }

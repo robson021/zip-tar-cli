@@ -1,5 +1,6 @@
 use crate::error::OperationError;
 use std::env;
+use std::process::exit;
 
 mod arg_parser;
 mod command_builder;
@@ -16,7 +17,7 @@ fn main() {
 
     if args.len() > 1 {
         match arg_parser::parse_and_run(args) {
-            Ok(_) => std::process::exit(0),
+            Ok(_) => exit(0),
             Err(e) => eprintln!("{e}"),
         }
     }
@@ -35,6 +36,7 @@ fn print_menu() {
     \n2. Zip file or directory.\
     \n3. Zip and secure with password.\
     \n4. Tar file or directory.\
+    \n5. Add to exising archive.\
     \n0. Exit program.";
     println!("{menu}");
 }
@@ -45,17 +47,16 @@ fn handle_menu_option(option: i32) {
         2 => command_builder::zip(false),
         3 => command_builder::zip(true),
         4 => command_builder::tar(),
-        0 => std::process::exit(0),
+        5 => command_builder::add_to_exising_archive(),
+        0 => exit(0),
         _ => Err(OperationError::InvalidCommand.into()),
     };
 
     match command {
-        Ok(cmd) => {
-            let r = command_runner::run_command(&cmd);
-            if r.is_err() {
-                eprintln!("Failed to run command '{cmd}': {:?}", r.unwrap_err());
-            }
-        }
+        Ok(cmd) => match command_runner::run_command(&cmd) {
+            Ok(_) => exit(0),
+            Err(e) => eprintln!("Failed with error: {e:?}"),
+        },
         Err(error) => {
             eprintln!("{error}");
         }

@@ -14,6 +14,13 @@ pub fn find_dir_of_wildcard_files(path: &str) -> Result<String, Box<dyn Error>> 
     }
 }
 
+pub fn find_file_extension(path: &str) -> Result<String, &'static str> {
+    match last_index_of_char(path, '.') {
+        Some(idx) => Ok(path[idx..].to_owned()),
+        None => Err("No extension found."),
+    }
+}
+
 fn last_index_of_char(s: &str, to_find: char) -> Option<usize> {
     s.chars()
         .rev()
