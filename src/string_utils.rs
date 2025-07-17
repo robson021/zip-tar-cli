@@ -46,4 +46,19 @@ mod tests {
         let dir = find_dir_of_wildcard_files("/foo/bar/*/file.txt");
         assert!(dir.is_err());
     }
+
+    #[test]
+    fn should_find_file_extension() {
+        let ext = find_file_extension("/foo/bar/path/file.zip").unwrap();
+        assert_eq!(ext, ".zip");
+    }
+
+    #[test]
+    fn should_find_last_index_of_char() {
+        let index = last_index_of_char("/foo/bar/path/example_file.txt", '/').unwrap();
+        assert_eq!(13, index);
+
+        let option = last_index_of_char("/foo/bar/file", '.');
+        assert!(option.is_none());
+    }
 }

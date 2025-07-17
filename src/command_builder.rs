@@ -51,7 +51,7 @@ fn get_unique_archive_name(short_name: &str) -> String {
     format!("{short_name}_archive")
 }
 
-pub(crate) fn add_to_exising_archive() -> Result<String, Box<dyn Error>> {
+pub fn add_to_exising_archive() -> Result<String, Box<dyn Error>> {
     print!("Let's find existing archive. ");
     let archive = input_handler::read_path_to_archive()?;
     let ext = string_utils::find_file_extension(&archive)?;
