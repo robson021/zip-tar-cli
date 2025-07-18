@@ -5,21 +5,20 @@ use lazy_static::lazy_static;
 use std::collections::HashSet;
 use std::error::Error;
 
-// lazy_static! {
-//     static ref VALID_VIDEO_FORMATS: String = vec![
-//         ".zip", ".rar", ".ar", ".tar", ".tgz", ".tbz", ".tbz2", ".tzo", ".cab", ".cbz", ".zoo",
-//         ".tar.xz", ".tar.gz", ".tar.bz", ".tar.bz2", ".tar.lzo", ".tar.7z",
-//     ].join("|");
-// }
-
 lazy_static! {
-    static ref VALID_ARCHIVE_FORMATS: HashSet<&'static str> = HashSet::from_iter( vec![
+    static ref VALID_ARCHIVE_FORMATS: HashSet<&'static str> = HashSet::from_iter(vec![
         ".zip", ".rar", ".ar", ".tar", ".tgz", ".tbz", ".tbz2", ".tzo", ".cab", ".cbz", ".zoo",
         ".tar.xz", ".tar.gz", ".tar.bz", ".tar.bz2", ".tar.lzo", ".tar.7z",
     ]);
-    // .join("|");
+    static ref FORMATS_JOINED: String = VALID_ARCHIVE_FORMATS
+        .to_owned()
+        .iter()
+        .copied()
+        .collect::<Vec<&str>>()
+        .join("|");
 }
 
+#[inline]
 pub fn unpack() -> Result<String, Box<dyn Error>> {
     let file = input_handler::read_path_to_archive()?;
     unpack_path(&file)
@@ -33,14 +32,10 @@ pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
 
 pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
     let path = file_handler::get_file_metadata(path)?.to_string_path();
-    let formats = VALID_ARCHIVE_FORMATS
-        .to_owned()
-        .into_iter()
-        .collect::<Vec<&str>>()
-        .join("|");
+    let formats = FORMATS_JOINED.as_str();
 
     let files = execute_cmd_get_lines(&format!("ls {path} | grep -E '{formats}'"));
-    let files = files
+    let archive_paths = files
         .iter()
         .filter(|file| match string_utils::find_file_extension(file) {
             Ok(ext) => VALID_ARCHIVE_FORMATS.contains(&&*ext),
@@ -48,14 +43,18 @@ pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
         })
         .collect::<Vec<&String>>();
 
-    println!("Found {} files to extract: {:?}.", files.len(), files);
+    println!(
+        "Found {} files to extract: {:?}.",
+        archive_paths.len(),
+        archive_paths
+    );
 
-    let mut archives = Vec::new();
-    for file in files {
+    let mut commands = Vec::new();
+    for file in archive_paths {
         let file = unpack_path(file)?;
-        archives.push(file);
+        commands.push(file);
     }
-    Ok(archives.join(" && "))
+    Ok(commands.join(" && "))
 }
 
 #[inline]
