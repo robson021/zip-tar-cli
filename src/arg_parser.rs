@@ -2,7 +2,7 @@ use crate::command_builder::tar_path;
 use crate::error::OperationError;
 use crate::file_metadata::FileMetadata;
 use crate::{command_builder, command_runner, file_handler};
-use command_builder::{unpack_path, zip_path};
+use command_builder::{unpack_all_in_path, unpack_path, zip_path};
 use std::error::Error;
 
 const EXPECTED_NUMER_OF_ARGS: usize = 3;
@@ -35,8 +35,9 @@ fn validate_number_of_args(number_of_args: usize) -> Result<(), Box<dyn Error>> 
 fn parse_cmd(action: &str, metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
     let cmd = match action {
         "-x" | "-u" | "--unpack" | "-d" | "--decompress" => unpack_path(&metadata.path)?,
+        "-xa" | "-ax" | "--extract-all" => unpack_all_in_path(&metadata.path)?,
         "-z" | "--zip" => zip_path(metadata, false)?,
-        "-ze" | "-ez" | "--zip_encrypt" => zip_path(metadata, true)?,
+        "-ze" | "-ez" | "--zip-encrypt" => zip_path(metadata, true)?,
         "-t" | "--tar" => tar_path(metadata)?,
         _ => {
             return Err(
@@ -81,7 +82,7 @@ mod tests {
 
     #[test]
     fn parse_zip_encrypt() {
-        for arg in ["-ze", "-ez", "--zip_encrypt"] {
+        for arg in ["-ze", "-ez", "--zip-encrypt"] {
             let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
             assert!(cmd.starts_with("zip -re test_archive"));
             assert!(cmd.ends_with(&format!(".zip {TEST_FILES}/*")));

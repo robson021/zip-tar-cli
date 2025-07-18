@@ -1,6 +1,23 @@
+use crate::command_runner::execute_cmd_get_lines;
 use crate::file_metadata::FileMetadata;
-use crate::{input_handler, string_utils};
+use crate::{file_handler, input_handler, string_utils};
+use lazy_static::lazy_static;
 use std::error::Error;
+
+// lazy_static! {
+//     static ref VALID_VIDEO_FORMATS: String = vec![
+//         ".zip", ".rar", ".ar", ".tar", ".tgz", ".tbz", ".tbz2", ".tzo", ".cab", ".cbz", ".zoo",
+//         ".tar.xz", ".tar.gz", ".tar.bz", ".tar.bz2", ".tar.lzo", ".tar.7z",
+//     ].join("|");
+// }
+
+lazy_static! {
+    static ref VALID_VIDEO_FORMATS: Vec<&'static str> = vec![
+        ".zip", ".rar", ".ar", ".tar", ".tgz", ".tbz", ".tbz2", ".tzo", ".cab", ".cbz", ".zoo",
+        ".tar.xz", ".tar.gz", ".tar.bz", ".tar.bz2", ".tar.lzo", ".tar.7z",
+    ];
+    // .join("|");
+}
 
 pub fn unpack() -> Result<String, Box<dyn Error>> {
     let file = input_handler::read_path_to_archive()?;
@@ -11,6 +28,31 @@ pub fn unpack() -> Result<String, Box<dyn Error>> {
 pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
     let cmd = format!("tar -xvf {path}");
     Ok(cmd)
+}
+
+pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
+    let path = file_handler::get_file_metadata(path)?.to_string_path();
+    let formats = VALID_VIDEO_FORMATS.join("|");
+    let cmd = format!("ls {path} | grep -E '{formats}'");
+    println!("{cmd}");
+    let files = execute_cmd_get_lines(&cmd);
+    let files = files
+        .iter()
+        .filter(|file| {
+            let ext = string_utils::find_file_extension(file);
+            return match ext {
+                Ok(ext) => VALID_VIDEO_FORMATS.contains(&&*ext),
+                Err(_) => false,
+            };
+        })
+        .collect::<Vec<&String>>();
+
+    println!("Found {} files to extract: {:?}.", files.len(), files);
+    for file in files {
+        println!("File to extract: '{}'", file);
+        // unpack_path(file)?;
+    }
+    todo!()
 }
 
 #[inline]

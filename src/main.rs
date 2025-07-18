@@ -32,11 +32,12 @@ fn main() {
 
 fn print_menu() {
     let menu = "\nChose an option:\
-    \n1. Unpack archive.\
+    \n1. Extract archive.\
     \n2. Zip file or directory.\
     \n3. Zip and secure with password.\
     \n4. Tar file or directory.\
     \n5. Add to exising archive.\
+    \n6. Extract all in directory.\
     \n0. Exit program.";
     println!("{menu}");
 }
@@ -48,6 +49,7 @@ fn handle_menu_option(option: i32) {
         3 => command_builder::zip(true),
         4 => command_builder::tar(),
         5 => command_builder::add_to_exising_archive(),
+        // 6 => command_builder::extract_all(),
         0 => exit(0),
         _ => Err(OperationError::InvalidCommand.into()),
     };
