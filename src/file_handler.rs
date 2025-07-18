@@ -38,7 +38,7 @@ pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>
 mod tests {
     use super::*;
 
-    const TEST_FILES: &str = "./resources/test";
+    const TEST_FILES: &str = "./resources/test/files";
 
     #[test]
     fn should_get_metadata() {

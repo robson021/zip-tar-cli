@@ -53,11 +53,17 @@ mod tests {
     use super::*;
     use lazy_static::lazy_static;
 
-    const TEST_FILES: &str = "./resources/test";
+    const TEST_FILES: &str = "./resources/test/files";
+    const TEST_ARCHIVE_FILES: &str = "./resources/test/archives";
 
     lazy_static! {
         static ref TEST_METADATA: FileMetadata = FileMetadata {
             path: TEST_FILES.to_owned(),
+            wildcard: None,
+            is_directory: true,
+        };
+        static ref TEST_ARCHIVES_METADATA: FileMetadata = FileMetadata {
+            path: TEST_ARCHIVE_FILES.to_owned(),
             wildcard: None,
             is_directory: true,
         };
@@ -75,8 +81,7 @@ mod tests {
     fn parse_zip() {
         for arg in ["-z", "--zip"] {
             let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
-            assert!(cmd.starts_with("zip -r test_archive"));
-            assert!(cmd.ends_with(&format!(".zip {TEST_FILES}/*")));
+            assert_eq!("zip -r files_archive.zip ./resources/test/files/*", cmd);
         }
     }
 
@@ -84,8 +89,7 @@ mod tests {
     fn parse_zip_encrypt() {
         for arg in ["-ze", "-ez", "--zip-encrypt"] {
             let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
-            assert!(cmd.starts_with("zip -re test_archive"));
-            assert!(cmd.ends_with(&format!(".zip {TEST_FILES}/*")));
+            assert_eq!("zip -re files_archive.zip ./resources/test/files/*", cmd);
         }
     }
 
@@ -93,8 +97,24 @@ mod tests {
     fn parse_tar() {
         for arg in ["-t", "--tar"] {
             let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
-            assert!(cmd.starts_with("tar -cf test_archive"));
-            assert!(cmd.ends_with(&format!(".tar {TEST_FILES}/*")));
+            assert_eq!("tar -cf files_archive.tar ./resources/test/files/*", cmd);
+        }
+    }
+
+    #[test]
+    fn extract_multiple_archives() {
+        for arg in ["-xa", "-ax", "--extract-all"] {
+            let cmd = parse_cmd(arg, &TEST_ARCHIVES_METADATA).unwrap();
+            assert!(cmd.contains("tar -xvf ./resources/test/archives/resources_archive.tar"));
+            assert!(cmd.contains("tar -xvf ./resources/test/archives/resources_archive.zip"));
+            assert!(cmd.contains(" && "));
+
+            // may be collected in different order
+            // assert_eq!(
+            //     "tar -xvf ./resources/test/archives/resources_archive.tar \
+            //     && tar -xvf ./resources/test/archives/resources_archive.zip",
+            //     cmd
+            // );
         }
     }
 }

@@ -39,27 +39,23 @@ pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
         .collect::<Vec<&str>>()
         .join("|");
 
-    let cmd = format!("ls {path} | grep -E '{formats}'");
-    // println!("{cmd}");
-
-    let files = execute_cmd_get_lines(&cmd);
+    let files = execute_cmd_get_lines(&format!("ls {path} | grep -E '{formats}'"));
     let files = files
         .iter()
-        .filter(|file| {
-            let ext = string_utils::find_file_extension(file);
-            match ext {
-                Ok(ext) => VALID_ARCHIVE_FORMATS.contains(&&*ext),
-                _ => false,
-            }
+        .filter(|file| match string_utils::find_file_extension(file) {
+            Ok(ext) => VALID_ARCHIVE_FORMATS.contains(&&*ext),
+            _ => false,
         })
         .collect::<Vec<&String>>();
 
     println!("Found {} files to extract: {:?}.", files.len(), files);
+
+    let mut archives = Vec::new();
     for file in files {
-        // println!("File to extract: '{file}'");
-        unpack_path(file)?;
+        let file = unpack_path(file)?;
+        archives.push(file);
     }
-    todo!()
+    Ok(archives.join(" && "))
 }
 
 #[inline]
