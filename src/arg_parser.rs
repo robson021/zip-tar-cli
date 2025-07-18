@@ -73,7 +73,7 @@ mod tests {
     fn parse_decompress() {
         for arg in ["-u", "--unpack", "-d", "--decompress", "-x"] {
             let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
-            assert_eq!(cmd, format!("tar -xvf {TEST_FILES}"));
+            assert_eq!(cmd, format!("tar -xvf '{TEST_FILES}'"));
         }
     }
 
@@ -105,8 +105,8 @@ mod tests {
     fn extract_multiple_archives() {
         for arg in ["-xa", "-ax", "--extract-all"] {
             let cmd = parse_cmd(arg, &TEST_ARCHIVES_METADATA).unwrap();
-            assert!(cmd.contains("tar -xvf ./resources/test/archives/resources_archive.tar"));
-            assert!(cmd.contains("tar -xvf ./resources/test/archives/resources_archive.zip"));
+            assert!(cmd.contains("tar -xvf './resources/test/archives/resources_archive.tar'"));
+            assert!(cmd.contains("tar -xvf './resources/test/archives/resources_archive.zip'"));
             assert!(cmd.contains(" && "));
 
             // may be collected in different order

@@ -26,7 +26,7 @@ pub fn unpack() -> Result<String, Box<dyn Error>> {
 
 #[inline]
 pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
-    let cmd = format!("tar -xvf {path}");
+    let cmd = format!("tar -xvf '{path}'");
     Ok(cmd)
 }
 
