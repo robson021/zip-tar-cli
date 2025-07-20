@@ -34,7 +34,7 @@ fn validate_number_of_args(number_of_args: usize) -> Result<(), Box<dyn Error>> 
 #[inline]
 fn parse_cmd(action: &str, metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
     let cmd = match action {
-        "-x" | "-u" | "--unpack" | "-d" | "--decompress" => unpack_path(&metadata.path)?,
+        "-x" | "-u" | "--extract" | "-d" | "--decompress" => unpack_path(&metadata.path)?,
         "-xa" | "-ax" | "--extract-all" => unpack_all_in_path(&metadata.path)?,
         "-z" | "--zip" => zip_path(metadata, false)?,
         "-ze" | "-ez" | "--zip-encrypt" => zip_path(metadata, true)?,
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn parse_decompress() {
-        for arg in ["-u", "--unpack", "-d", "--decompress", "-x"] {
+        for arg in ["-u", "--extract", "-d", "--decompress", "-x"] {
             let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
             assert_eq!(cmd, format!("tar -xvf '{TEST_FILES}'"));
         }
