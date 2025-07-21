@@ -67,7 +67,7 @@ pub fn zip(with_password: bool) -> Result<String, Box<dyn Error>> {
 
 #[inline]
 pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String, Box<dyn Error>> {
-    let destination_archive = get_unique_archive_name(&metadata.to_short_name()?);
+    let destination_archive = get_clean_archive_name(&metadata.to_short_name()?);
     let encryption = match with_password {
         true => "e",
         false => "",
@@ -86,14 +86,14 @@ pub fn tar() -> Result<String, Box<dyn Error>> {
 
 #[inline]
 pub fn tar_path(metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
-    let destination_archive = get_unique_archive_name(&metadata.to_short_name()?);
+    let destination_archive = get_clean_archive_name(&metadata.to_short_name()?);
     let path = metadata.to_string_path();
     let cmd = format!("tar -cf {destination_archive}.tar {path}");
     Ok(cmd)
 }
 
 #[inline]
-fn get_unique_archive_name(short_name: &str) -> String {
+fn get_clean_archive_name(short_name: &str) -> String {
     let short_name = short_name.replace(".", "_");
     format!("{short_name}_archive")
 }

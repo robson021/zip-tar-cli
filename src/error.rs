@@ -8,10 +8,10 @@ pub enum OperationError {
     #[error("File does not exist.")]
     FileDoesNotExist,
 
-    #[error("Failed to check file existence in the path {0}.")]
+    #[error("Failed to check file existence in the path '{0}'.")]
     CouldNotCheckFile(String),
 
-    #[error("Could not find the directory for files with wildcard {0}.")]
+    #[error("Could not find the directory for files with wildcard '{0}'.")]
     CouldNotFindDirForFileWithWildcard(String),
 
     #[error("Failed to run command: '{0}'.")]
@@ -20,7 +20,7 @@ pub enum OperationError {
     #[error("Archive is a directory.")]
     ArchiveIsDirectory,
 
-    #[error("Unknown argument {0}.")]
+    #[error("Unknown argument '{0}'.")]
     InvalidArgument(String),
 
     #[error("Could not spit the path: '{0}'.")]
