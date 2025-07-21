@@ -94,6 +94,7 @@ pub fn tar_path(metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
 
 #[inline]
 fn get_unique_archive_name(short_name: &str) -> String {
+    let short_name = short_name.replace(".", "_");
     format!("{short_name}_archive")
 }
 
