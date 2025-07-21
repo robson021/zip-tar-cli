@@ -32,16 +32,18 @@ pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
 
 pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
     let path = file_handler::get_file_metadata(path)?.to_string_path();
+    let path = path.trim_end_matches("/*");
     let formats = FORMATS_JOINED.as_str();
 
-    let files = execute_cmd_get_lines(&format!("ls {path} | grep -E '{formats}'"));
+    let files = execute_cmd_get_lines(&format!("ls '{path}' | grep -E '{formats}'"));
     let archive_paths = files
         .iter()
         .filter(|file| match string_utils::find_file_extension(file) {
             Ok(ext) => VALID_ARCHIVE_FORMATS.contains(&&*ext),
             _ => false,
         })
-        .collect::<Vec<&String>>();
+        .map(|file| format!("{path}/{file}"))
+        .collect::<Vec<String>>();
 
     println!(
         "Found {} files to extract: {:?}.",
@@ -51,7 +53,7 @@ pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
 
     let mut commands = Vec::new();
     for file in archive_paths {
-        let file = unpack_path(file)?;
+        let file = unpack_path(&file)?;
         commands.push(file);
     }
     Ok(commands.join(" && "))
