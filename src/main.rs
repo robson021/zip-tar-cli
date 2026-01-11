@@ -49,7 +49,7 @@ fn handle_menu_option(option: i32) {
         3 => command_builder::zip(true),
         4 => command_builder::tar(),
         5 => command_builder::add_to_exising_archive(),
-        // 6 => command_builder::extract_all(),
+        6 => command_builder::extract_all(),
         0 => exit(0),
         _ => Err(OperationError::InvalidCommand.into()),
     };

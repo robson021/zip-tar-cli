@@ -1,8 +1,9 @@
-use crate::command_runner::execute_cmd_get_lines;
+use crate::command_runner::{execute_cmd_get_lines, run_command};
 use crate::file_metadata::FileMetadata;
 use crate::{file_handler, input_handler, string_utils};
 use lazy_static::lazy_static;
 use std::collections::HashSet;
+use std::env;
 use std::error::Error;
 
 lazy_static! {
@@ -26,8 +27,12 @@ pub fn unpack() -> Result<String, Box<dyn Error>> {
 
 #[inline]
 pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
-    let cmd = format!("tar -xvf '{path}'");
-    Ok(cmd)
+    let current_dir = env::current_dir()?.display().to_string();
+    let target_dir = format!("{current_dir}/extracted_files");
+
+    run_command(&format!("mkdir -p {target_dir}"))?;
+
+    Ok(format!("tar -xvf '{path}' -C '{target_dir}'"))
 }
 
 pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
@@ -59,13 +64,11 @@ pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
     Ok(commands.join(" && "))
 }
 
-#[inline]
 pub fn zip(with_password: bool) -> Result<String, Box<dyn Error>> {
     let file_metadata = input_handler::read_path_to_file_or_directory()?;
     zip_path(&file_metadata, with_password)
 }
 
-#[inline]
 pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String, Box<dyn Error>> {
     let destination_archive = get_clean_archive_name(&metadata.to_short_name()?);
     let encryption = match with_password {
@@ -78,13 +81,11 @@ pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String, 
     ))
 }
 
-#[inline]
 pub fn tar() -> Result<String, Box<dyn Error>> {
     let file_metadata = input_handler::read_path_to_file_or_directory()?;
     tar_path(&file_metadata)
 }
 
-#[inline]
 pub fn tar_path(metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
     let destination_archive = get_clean_archive_name(&metadata.to_short_name()?);
     let path = metadata.to_string_path();
@@ -108,5 +109,11 @@ pub fn add_to_exising_archive() -> Result<String, Box<dyn Error>> {
         ".zip" => format!("zip -ur {archive} {files}"),
         _ => format!("tar -rv --append --file={archive} {files}"),
     };
+    Ok(cmd)
+}
+
+pub fn extract_all() -> Result<String, Box<dyn Error>> {
+    let path = input_handler::read_path_to_file_or_directory()?.to_string_path();
+    let cmd = unpack_all_in_path(&path)?;
     Ok(cmd)
 }

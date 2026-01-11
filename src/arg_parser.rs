@@ -52,6 +52,7 @@ fn parse_cmd(action: &str, metadata: &FileMetadata) -> Result<String, Box<dyn Er
 mod tests {
     use super::*;
     use lazy_static::lazy_static;
+    use std::env;
 
     const TEST_FILES: &str = "./resources/test/files";
     const TEST_ARCHIVE_FILES: &str = "./resources/test/archives";
@@ -72,8 +73,13 @@ mod tests {
     #[test]
     fn parse_decompress() {
         for arg in ["-u", "--extract", "-d", "--decompress", "-x"] {
+            let expected_path = env::current_dir().unwrap().display().to_string();
             let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
-            assert_eq!(cmd, format!("tar -xvf '{TEST_FILES}'"));
+
+            assert_eq!(
+                cmd,
+                format!("tar -xvf '{TEST_FILES}' -C '{expected_path}/extracted_files'")
+            );
         }
     }
 

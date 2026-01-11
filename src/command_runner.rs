@@ -35,7 +35,7 @@ pub fn execute_cmd_get_lines(cmd: &str) -> Vec<String> {
 #[inline]
 fn get_os_specific_cmd_args() -> (&'static str, &'static str) {
     if cfg!(target_os = "windows") {
-        panic!("Windows is not supported yet.");
+        panic!("Windows is not supported.");
         // ("cmd", "/C")
     } else {
         ("sh", "-c")
