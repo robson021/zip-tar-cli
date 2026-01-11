@@ -73,7 +73,7 @@ pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>
     }
 }
 
-#[inline(always)]
+#[inline]
 fn get_from_dir(metadata: &FileMetadata) -> String {
     if !metadata.is_directory {
         panic!("Not a directory: {metadata:?}");

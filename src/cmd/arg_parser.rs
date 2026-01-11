@@ -31,7 +31,6 @@ fn validate_number_of_args(number_of_args: usize) -> Result<(), Box<dyn Error>> 
     Ok(())
 }
 
-#[inline]
 fn parse_cmd(action: &str, metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
     let cmd = match action {
         "-x" | "-u" | "--extract" | "-d" | "--decompress" => unpack_path(&metadata.path)?,

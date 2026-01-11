@@ -21,6 +21,7 @@ pub fn find_file_extension(path: &str) -> Result<String, &'static str> {
     }
 }
 
+#[inline]
 fn last_index_of_char(s: &str, to_find: char) -> Option<usize> {
     s.chars()
         .rev()
