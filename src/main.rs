@@ -34,7 +34,8 @@ fn print_menu() {
     \n3. Zip and secure with password.\
     \n4. Tar file or directory.\
     \n5. Add to exising archive.\
-    \n6. Extract all in directory.\
+    \n6. Extract all archives in a specific directory.\
+    \n7. Extract all archives in the current directory.\
     \n0. Exit program.";
     println!("{menu}");
 }
@@ -47,6 +48,7 @@ fn handle_menu_option(option: i32) {
         4 => command_builder::tar(),
         5 => command_builder::add_to_exising_archive(),
         6 => command_builder::extract_all(),
+        7 => command_builder::extract_all_in_current_dir(),
         0 => exit(0),
         _ => Err(OperationError::InvalidCommand.into()),
     };

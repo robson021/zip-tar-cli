@@ -118,3 +118,8 @@ pub fn extract_all() -> Result<String, Box<dyn Error>> {
     let cmd = unpack_all_in_path(&path)?;
     Ok(cmd)
 }
+
+pub fn extract_all_in_current_dir() -> Result<String, Box<dyn Error>> {
+    let cmd = unpack_all_in_path(".")?;
+    Ok(cmd)
+}
