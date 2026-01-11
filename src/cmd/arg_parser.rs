@@ -1,8 +1,8 @@
-use crate::command_builder::tar_path;
+use crate::cmd::command_builder::{tar_path, unpack_all_in_path, unpack_path, zip_path};
+use crate::cmd::command_runner;
 use crate::error::OperationError;
-use crate::file_metadata::FileMetadata;
-use crate::{command_builder, command_runner, file_handler};
-use command_builder::{unpack_all_in_path, unpack_path, zip_path};
+use crate::file::file_metadata;
+use crate::file::file_metadata::FileMetadata;
 use std::error::Error;
 
 const EXPECTED_NUMER_OF_ARGS: usize = 3;
@@ -13,7 +13,7 @@ pub fn parse_and_run(cmd_args: Vec<String>) -> Result<(), Box<dyn Error>> {
     let action = &cmd_args[1];
     let path = &cmd_args[2];
 
-    let metadata = file_handler::get_file_metadata(path)?;
+    let metadata = file_metadata::get_file_metadata(path)?;
 
     let cmd: String = parse_cmd(action, &metadata)?;
     command_runner::run_command(&cmd)?;

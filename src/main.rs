@@ -1,15 +1,12 @@
+use crate::cmd::{arg_parser, command_builder, command_runner};
 use crate::error::OperationError;
 use std::env;
 use std::process::exit;
 
-mod arg_parser;
-mod command_builder;
-mod command_runner;
+mod cmd;
 mod error;
-mod file_handler;
-mod file_metadata;
+mod file;
 mod input_handler;
-mod string_utils;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

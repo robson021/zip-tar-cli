@@ -1,6 +1,7 @@
-use crate::command_runner::{execute_cmd_get_lines, run_command};
-use crate::file_metadata::FileMetadata;
-use crate::{file_handler, input_handler, string_utils};
+use crate::cmd::command_runner::{execute_cmd_get_lines, run_command};
+use crate::file::file_metadata::FileMetadata;
+use crate::file::{file_metadata, string_utils};
+use crate::input_handler;
 use lazy_static::lazy_static;
 use std::collections::HashSet;
 use std::env;
@@ -36,7 +37,7 @@ pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
 }
 
 pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
-    let path = file_handler::get_file_metadata(path)?.to_string_path();
+    let path = file_metadata::get_file_metadata(path)?.to_string_path();
     let path = path.trim_end_matches("/*");
     let formats = FORMATS_JOINED.as_str();
 
