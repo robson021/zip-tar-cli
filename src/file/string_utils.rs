@@ -4,7 +4,9 @@ use std::error::Error;
 pub fn find_dir_of_wildcard_files(path: &str) -> Result<String, Box<dyn Error>> {
     match last_index_of_char(path, '/') {
         Some(slash_idx) => {
-            let wildcard_idx = last_index_of_char(path, '*').unwrap();
+            let wildcard_idx = last_index_of_char(path, '*').ok_or_else(|| {
+                OperationError::CouldNotFindDirForFileWithWildcard(path.to_owned())
+            })?;
             if wildcard_idx < slash_idx {
                 return Err(OperationError::InvalidWildcardIndex.into());
             }
@@ -23,10 +25,7 @@ pub fn find_file_extension(path: &str) -> Result<String, &'static str> {
 
 #[inline]
 fn last_index_of_char(s: &str, to_find: char) -> Option<usize> {
-    s.chars()
-        .rev()
-        .position(|c| c == to_find)
-        .map(|rev_pos| s.chars().count() - rev_pos - 1)
+    s.rfind(to_find)
 }
 
 #[cfg(test)]

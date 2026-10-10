@@ -1,7 +1,7 @@
 use crate::error::OperationError;
 use crate::file::string_utils;
 use std::error::Error;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub struct FileMetadata {
@@ -14,32 +14,19 @@ impl FileMetadata {
     pub fn to_string_path(&self) -> String {
         match self.is_directory {
             true => get_from_dir(self),
-            false => self.path.to_owned(),
+            false => self.path.clone(),
         }
     }
     pub fn to_short_name(&self) -> Result<String, Box<dyn Error>> {
-        let option = self.path.split('/').next_back();
-        if option.is_none() {
-            return Err(Box::new(OperationError::CouldNotSpitPath(
-                self.path.to_owned(),
-            )));
-        }
-
-        let last = option.unwrap();
-
-        match self.is_directory {
-            true => Ok(last.to_owned()),
-            false => {
-                let option = last.split(".").next();
-                if option.is_none() {
-                    return Err(Box::new(OperationError::CouldNotSpitPath(
-                        "no file extension".to_owned(),
-                    )));
-                }
-
-                Ok(option.unwrap().to_owned())
-            }
-        }
+        let path = Path::new(&self.path);
+        let name = if self.is_directory {
+            path.file_name()
+        } else {
+            path.file_stem()
+        };
+        name.and_then(|name| name.to_str())
+            .map(str::to_owned)
+            .ok_or_else(|| OperationError::CouldNotSplitPath(self.path.clone()).into())
     }
 }
 
@@ -56,33 +43,25 @@ pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>
     };
 
     let p = Path::new(&path);
-    match p.try_exists() {
-        Ok(exists) => match exists {
-            true => {
-                let metadata = FileMetadata {
-                    path: path.to_owned(),
-                    is_directory: p.is_dir(),
-                    wildcard: wildcard_value,
-                };
-                println!("Found file/directory: {metadata:?}.");
-                Ok(metadata)
-            }
-            false => Err(OperationError::FileDoesNotExist.into()),
-        },
-        Err(_) => Err(OperationError::CouldNotCheckFile(path).into()),
+    if !p.try_exists()? {
+        return Err(OperationError::FileDoesNotExist.into());
     }
+
+    let is_directory = p.is_dir();
+    let metadata = FileMetadata {
+        path,
+        is_directory,
+        wildcard: wildcard_value,
+    };
+    println!("Found file/directory: {metadata:?}.");
+    Ok(metadata)
 }
 
 #[inline]
 fn get_from_dir(metadata: &FileMetadata) -> String {
-    if !metadata.is_directory {
-        panic!("Not a directory: {metadata:?}");
-    }
-    let path = &metadata.path;
-    match &metadata.wildcard {
-        None => format!("{path}/*"),
-        Some(wildcard) => format!("{path}/{wildcard}"),
-    }
+    let path = PathBuf::from(&metadata.path);
+    let wildcard = metadata.wildcard.as_deref().unwrap_or("*");
+    path.join(wildcard).to_string_lossy().into_owned()
 }
 
 #[cfg(test)]

@@ -50,30 +50,33 @@ fn parse_cmd(action: &str, metadata: &FileMetadata) -> Result<String, Box<dyn Er
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lazy_static::lazy_static;
     use std::env;
 
     const TEST_FILES: &str = "./resources/test/files";
     const TEST_ARCHIVE_FILES: &str = "./resources/test/archives";
 
-    lazy_static! {
-        static ref TEST_METADATA: FileMetadata = FileMetadata {
+    fn test_metadata() -> FileMetadata {
+        FileMetadata {
             path: TEST_FILES.to_owned(),
             wildcard: None,
             is_directory: true,
-        };
-        static ref TEST_ARCHIVES_METADATA: FileMetadata = FileMetadata {
+        }
+    }
+
+    fn test_archives_metadata() -> FileMetadata {
+        FileMetadata {
             path: TEST_ARCHIVE_FILES.to_owned(),
             wildcard: None,
             is_directory: true,
-        };
+        }
     }
 
     #[test]
     fn parse_decompress() {
+        let metadata = test_metadata();
         for arg in ["-u", "--extract", "-d", "--decompress", "-x"] {
             let expected_path = env::current_dir().unwrap().display().to_string();
-            let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
+            let cmd = parse_cmd(arg, &metadata).unwrap();
 
             assert_eq!(
                 cmd,
@@ -84,34 +87,38 @@ mod tests {
 
     #[test]
     fn parse_zip() {
+        let metadata = test_metadata();
         for arg in ["-z", "--zip"] {
-            let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
+            let cmd = parse_cmd(arg, &metadata).unwrap();
             assert_eq!("zip -r files_archive.zip ./resources/test/files/*", cmd);
         }
     }
 
     #[test]
     fn parse_zip_encrypt() {
+        let metadata = test_metadata();
         for arg in ["-ze", "-ez", "--zip-encrypt"] {
-            let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
+            let cmd = parse_cmd(arg, &metadata).unwrap();
             assert_eq!("zip -re files_archive.zip ./resources/test/files/*", cmd);
         }
     }
 
     #[test]
     fn parse_tar() {
+        let metadata = test_metadata();
         for arg in ["-t", "--tar"] {
-            let cmd = parse_cmd(arg, &TEST_METADATA).unwrap();
+            let cmd = parse_cmd(arg, &metadata).unwrap();
             assert_eq!("tar -cf files_archive.tar ./resources/test/files/*", cmd);
         }
     }
 
     #[test]
     fn extract_multiple_archives() {
+        let metadata = test_archives_metadata();
         for arg in ["-xa", "-ax", "--extract-all"] {
-            let cmd = parse_cmd(arg, &TEST_ARCHIVES_METADATA).unwrap();
-            assert!(cmd.contains("tar -xvf './resources/test/archives/resources_archive.tar'"));
-            assert!(cmd.contains("tar -xvf './resources/test/archives/resources_archive.zip'"));
+            let cmd = parse_cmd(arg, &metadata).unwrap();
+            assert!(cmd.contains("tar -xvf 'resources/test/archives/resources_archive.tar'"));
+            assert!(cmd.contains("tar -xvf 'resources/test/archives/resources_archive.zip'"));
             assert!(cmd.contains(" && "));
 
             // may be collected in different order

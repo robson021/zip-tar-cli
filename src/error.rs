@@ -8,9 +8,6 @@ pub enum OperationError {
     #[error("File does not exist.")]
     FileDoesNotExist,
 
-    #[error("Failed to check file existence in the path '{0}'.")]
-    CouldNotCheckFile(String),
-
     #[error("Could not find the directory for files with wildcard '{0}'.")]
     CouldNotFindDirForFileWithWildcard(String),
 
@@ -23,11 +20,14 @@ pub enum OperationError {
     #[error("Unknown argument '{0}'.")]
     InvalidArgument(String),
 
-    #[error("Could not spit the path: '{0}'.")]
-    CouldNotSpitPath(String),
+    #[error("Could not split the path: '{0}'.")]
+    CouldNotSplitPath(String),
 
     #[error(
         "Wildcard is only supported at the end of a path - e.g. './my/path/file*' or './my/path/.*txt'"
     )]
     InvalidWildcardIndex,
+
+    #[error("Windows is not supported.")]
+    UnsupportedPlatform,
 }

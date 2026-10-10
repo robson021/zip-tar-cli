@@ -1,24 +1,16 @@
-use crate::cmd::command_runner::{execute_cmd_get_lines, run_command};
 use crate::file::file_metadata::FileMetadata;
 use crate::file::{file_metadata, string_utils};
 use crate::input_handler;
-use lazy_static::lazy_static;
-use std::collections::HashSet;
+use glob::glob;
 use std::env;
 use std::error::Error;
+use std::fs;
+use std::path::Path;
 
-lazy_static! {
-    static ref VALID_ARCHIVE_FORMATS: HashSet<&'static str> = HashSet::from_iter(vec![
-        ".zip", ".rar", ".ar", ".tar", ".tgz", ".tbz", ".tbz2", ".tzo", ".cab", ".cbz", ".zoo",
-        ".tar.xz", ".tar.gz", ".tar.bz", ".tar.bz2", ".tar.lzo", ".tar.7z",
-    ]);
-    static ref FORMATS_JOINED: String = VALID_ARCHIVE_FORMATS
-        .to_owned()
-        .iter()
-        .copied()
-        .collect::<Vec<&str>>()
-        .join("|");
-}
+const VALID_ARCHIVE_FORMATS: &[&str] = &[
+    ".zip", ".rar", ".ar", ".tar", ".tgz", ".tbz", ".tbz2", ".tzo", ".cab", ".cbz", ".zoo",
+    ".tar.xz", ".tar.gz", ".tar.bz", ".tar.bz2", ".tar.lzo", ".tar.7z",
+];
 
 #[inline]
 pub fn unpack() -> Result<String, Box<dyn Error>> {
@@ -28,28 +20,29 @@ pub fn unpack() -> Result<String, Box<dyn Error>> {
 
 #[inline]
 pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
-    let current_dir = env::current_dir()?.display().to_string();
-    let target_dir = format!("{current_dir}/extracted_files");
+    let target_dir = env::current_dir()?.join("extracted_files");
+    fs::create_dir_all(&target_dir)?;
 
-    run_command(&format!("mkdir -p {target_dir}"))?;
-
-    Ok(format!("tar -xvf '{path}' -C '{target_dir}'"))
+    Ok(format!("tar -xvf '{path}' -C '{}'", target_dir.display()))
 }
 
 pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
-    let path = file_metadata::get_file_metadata(path)?.to_string_path();
-    let path = path.trim_end_matches("/*");
-    let formats = FORMATS_JOINED.as_str();
-
-    let files = execute_cmd_get_lines(&format!("ls '{path}' | grep -E '{formats}'"));
-    let archive_paths = files
-        .iter()
-        .filter(|file| match string_utils::find_file_extension(file) {
-            Ok(ext) => VALID_ARCHIVE_FORMATS.contains(&&*ext),
-            _ => false,
-        })
-        .map(|file| format!("{path}/{file}"))
-        .collect::<Vec<String>>();
+    let metadata = file_metadata::get_file_metadata(path)?;
+    let wildcard = metadata.wildcard.as_deref().unwrap_or("*");
+    let pattern = Path::new(&metadata.path).join(wildcard);
+    let mut archive_paths = glob(&pattern.to_string_lossy())?.collect::<Result<Vec<_>, _>>()?;
+    archive_paths.retain(|path| {
+        path.is_file()
+            && path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| {
+                    VALID_ARCHIVE_FORMATS
+                        .iter()
+                        .any(|extension| name.ends_with(extension))
+                })
+    });
+    archive_paths.sort();
 
     println!(
         "Found {} files to extract: {:?}.",
@@ -59,7 +52,7 @@ pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
 
     let mut commands = Vec::new();
     for file in archive_paths {
-        let file = unpack_path(&file)?;
+        let file = unpack_path(&file.to_string_lossy())?;
         commands.push(file);
     }
     Ok(commands.join(" && "))
@@ -122,4 +115,17 @@ pub fn extract_all() -> Result<String, Box<dyn Error>> {
 pub fn extract_all_in_current_dir() -> Result<String, Box<dyn Error>> {
     let cmd = unpack_all_in_path(".")?;
     Ok(cmd)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extract_all_respects_archive_wildcard() {
+        let command = unpack_all_in_path("./resources/test/archives/*.zip").unwrap();
+
+        assert!(command.contains("resources_archive.zip"));
+        assert!(!command.contains("resources_archive.tar"));
+    }
 }
