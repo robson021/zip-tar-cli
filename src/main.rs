@@ -6,11 +6,20 @@ use std::process::exit;
 mod cmd;
 mod error;
 mod file;
+pub mod gui;
 mod input_handler;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     // dbg!(&args);
+
+    if args.iter().any(|arg| arg == "--gui") {
+        if let Err(e) = gui::run_gui() {
+            eprintln!("Failed to launch GUI: {e}");
+            exit(1);
+        }
+        exit(0);
+    }
 
     if args.len() > 1 {
         match arg_parser::parse_and_run(args) {
