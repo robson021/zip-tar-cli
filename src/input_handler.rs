@@ -4,6 +4,7 @@ use crate::file::file_metadata::FileMetadata;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::{Completion, Input, Select};
 use std::error::Error;
+use std::fmt::Display;
 use std::fs;
 use std::path::MAIN_SEPARATOR;
 
@@ -73,14 +74,24 @@ fn read_string(prompt: &str) -> Result<String, Box<dyn Error>> {
     Ok(input.trim().to_owned())
 }
 
-pub fn select_menu_option(items: &[&str]) -> Option<usize> {
-    Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("Choose an option")
+fn select_menu_option_with_prompt<T: Display + Copy>(prompt: &str, items: &[T]) -> Option<T> {
+    let selected_index = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt(prompt)
         .items(items)
         .default(0)
         .interact_opt()
         .ok()
-        .flatten()
+        .flatten()?;
+
+    items.get(selected_index).copied()
+}
+
+pub fn select_menu_option<T: Display + Copy>(items: &[T]) -> Option<T> {
+    select_menu_option_with_prompt("Choose an option", items)
+}
+
+pub fn select_submenu_option<T: Display + Copy>(prompt: &str, items: &[T]) -> Option<T> {
+    select_menu_option_with_prompt(prompt, items)
 }
 
 pub fn read_path_to_archive() -> Result<String, Box<dyn Error>> {
