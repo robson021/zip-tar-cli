@@ -14,6 +14,9 @@ pub enum OperationError {
     #[error("Failed to run command: '{0}'.")]
     FailedToRunCommand(String),
 
+    #[error("Nothing to do.")]
+    NothingToZip,
+
     #[error("Archive is a directory.")]
     ArchiveIsDirectory,
 
@@ -30,4 +33,22 @@ pub enum OperationError {
 
     #[error("Windows is not supported.")]
     UnsupportedPlatform,
+}
+
+pub fn print_error(message: impl std::fmt::Display) {
+    let prefix = console::style(" ✖ ERROR ").white().on_red().bold();
+    eprintln!("\n{prefix} {}\n", console::style(message).red().bold());
+}
+
+pub fn print_warning(message: impl std::fmt::Display) {
+    let prefix = console::style(" ⚠ ABORTED ").black().on_yellow().bold();
+    eprintln!("\n{prefix} {}\n", console::style(message).yellow());
+}
+
+pub fn print_result_location(path: &std::path::Path) {
+    let prefix = console::style(" ✔ DONE ").black().on_green().bold();
+    println!(
+        "\n{prefix} Result location: {}\n",
+        console::style(path.display()).green().bold()
+    );
 }

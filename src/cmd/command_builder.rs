@@ -5,23 +5,42 @@ use glob::glob;
 use std::env;
 use std::error::Error;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 const VALID_ARCHIVE_FORMATS: &[&str] = &[
     ".zip", ".rar", ".ar", ".tar", ".tgz", ".tbz", ".tbz2", ".tzo", ".cab", ".cbz", ".zoo",
     ".tar.xz", ".tar.gz", ".tar.bz", ".tar.bz2", ".tar.lzo", ".tar.7z",
 ];
 
-#[inline]
-pub fn unpack() -> Result<String, Box<dyn Error>> {
+pub type PlannedCommand = (String, PathBuf);
+
+pub fn extraction_dir() -> Result<PathBuf, Box<dyn Error>> {
+    Ok(env::current_dir()?.join("extracted_files"))
+}
+
+pub fn zip_archive_file(metadata: &FileMetadata) -> Result<PathBuf, Box<dyn Error>> {
+    let name = get_clean_archive_name(&metadata.to_short_name()?);
+    Ok(env::current_dir()?.join(format!("{name}.zip")))
+}
+
+pub fn tar_archive_file(metadata: &FileMetadata) -> Result<PathBuf, Box<dyn Error>> {
+    let name = get_clean_archive_name(&metadata.to_short_name()?);
+    Ok(env::current_dir()?.join(format!("{name}.tar")))
+}
+
+pub fn unpack() -> Result<PlannedCommand, Box<dyn Error>> {
     let file = input_handler::read_path_to_archive()?;
-    unpack_path(&file)
+    Ok((unpack_path(&file)?, extraction_dir()?))
 }
 
 #[inline]
 pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
-    let target_dir = env::current_dir()?.join("extracted_files");
-    fs::create_dir_all(&target_dir)?;
+    unpack_path_to_dir(path, &extraction_dir()?)
+}
+
+#[inline]
+pub fn unpack_path_to_dir(path: &str, target_dir: &Path) -> Result<String, Box<dyn Error>> {
+    fs::create_dir_all(target_dir)?;
 
     Ok(format!("tar -xvf '{path}' -C '{}'", target_dir.display()))
 }
@@ -58,26 +77,42 @@ pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
     Ok(commands.join(" && "))
 }
 
-pub fn zip(with_password: bool) -> Result<String, Box<dyn Error>> {
+pub fn zip(with_password: bool) -> Result<PlannedCommand, Box<dyn Error>> {
     let file_metadata = input_handler::read_path_to_file_or_directory()?;
-    zip_path(&file_metadata, with_password)
-}
-
-pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String, Box<dyn Error>> {
-    let destination_archive = get_clean_archive_name(&metadata.to_short_name()?);
-    let encryption = match with_password {
-        true => "e",
-        false => "",
-    };
-    let path_to_files = metadata.to_string_path();
-    Ok(format!(
-        "zip -r{encryption} {destination_archive}.zip {path_to_files}"
+    Ok((
+        zip_path(&file_metadata, with_password)?,
+        zip_archive_file(&file_metadata)?,
     ))
 }
 
-pub fn tar() -> Result<String, Box<dyn Error>> {
+pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String, Box<dyn Error>> {
+    let encryption = match with_password {
+        true => Some(""),
+        false => None,
+    };
+    zip_path_with_password(metadata, encryption)
+}
+
+pub fn zip_path_with_password(
+    metadata: &FileMetadata,
+    password: Option<&str>,
+) -> Result<String, Box<dyn Error>> {
+    let destination_archive = get_clean_archive_name(&metadata.to_short_name()?);
+    let path_to_files = metadata.to_string_path();
+    let cmd = match password {
+        Some(pwd) if !pwd.is_empty() => {
+            let safe_pwd = pwd.replace('\'', "'\\''");
+            format!("zip -P '{safe_pwd}' -r {destination_archive}.zip {path_to_files}")
+        }
+        Some(_) => format!("zip -re {destination_archive}.zip {path_to_files}"),
+        None => format!("zip -r {destination_archive}.zip {path_to_files}"),
+    };
+    Ok(cmd)
+}
+
+pub fn tar() -> Result<PlannedCommand, Box<dyn Error>> {
     let file_metadata = input_handler::read_path_to_file_or_directory()?;
-    tar_path(&file_metadata)
+    Ok((tar_path(&file_metadata)?, tar_archive_file(&file_metadata)?))
 }
 
 pub fn tar_path(metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
@@ -93,7 +128,7 @@ fn get_clean_archive_name(short_name: &str) -> String {
     format!("{short_name}_archive")
 }
 
-pub fn add_to_exising_archive() -> Result<String, Box<dyn Error>> {
+pub fn add_to_exising_archive() -> Result<PlannedCommand, Box<dyn Error>> {
     print!("Let's find existing archive. ");
     let archive = input_handler::read_path_to_archive()?;
     let ext = string_utils::find_file_extension(&archive)?;
@@ -103,18 +138,16 @@ pub fn add_to_exising_archive() -> Result<String, Box<dyn Error>> {
         ".zip" => format!("zip -ur {archive} {files}"),
         _ => format!("tar -rv --append --file={archive} {files}"),
     };
-    Ok(cmd)
+    Ok((cmd, PathBuf::from(archive)))
 }
 
-pub fn extract_all() -> Result<String, Box<dyn Error>> {
+pub fn extract_all() -> Result<PlannedCommand, Box<dyn Error>> {
     let path = input_handler::read_path_to_file_or_directory()?.to_string_path();
-    let cmd = unpack_all_in_path(&path)?;
-    Ok(cmd)
+    Ok((unpack_all_in_path(&path)?, extraction_dir()?))
 }
 
-pub fn extract_all_in_current_dir() -> Result<String, Box<dyn Error>> {
-    let cmd = unpack_all_in_path(".")?;
-    Ok(cmd)
+pub fn extract_all_in_current_dir() -> Result<PlannedCommand, Box<dyn Error>> {
+    Ok((unpack_all_in_path(".")?, extraction_dir()?))
 }
 
 #[cfg(test)]
@@ -127,5 +160,19 @@ mod tests {
 
         assert!(command.contains("resources_archive.zip"));
         assert!(!command.contains("resources_archive.tar"));
+    }
+
+    #[test]
+    fn zip_with_explicit_password() {
+        let metadata = FileMetadata {
+            path: "./resources/test/files".to_owned(),
+            wildcard: None,
+            is_directory: true,
+        };
+        let cmd = zip_path_with_password(&metadata, Some("my_secret")).unwrap();
+        assert_eq!(
+            "zip -P 'my_secret' -r files_archive.zip ./resources/test/files/*",
+            cmd
+        );
     }
 }
