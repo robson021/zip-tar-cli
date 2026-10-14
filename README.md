@@ -11,6 +11,6 @@ Run the program `cargo run` and follow the menu steps.
 - launch graphical interface: `cargo run -- --gui`
 
 ### I prefer alias to use it anywhere:
-`$ alias zip-tar-cli="cargoRun --manifest-path /Users/robert/git_repo/zip-tar-cli/Cargo.toml --"`
+`$ alias zip-tar-cli="cargoRun --manifest-path /Users/foo/bar/zip-tar-cli/Cargo.toml --"`
 <br>
 `$ zip-tar-cli -x ./some/dir/archive.zip`
