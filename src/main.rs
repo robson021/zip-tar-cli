@@ -63,8 +63,11 @@ fn handle_menu_option(option: usize) {
     };
 
     match command {
-        Ok(cmd) => match command_runner::run_command(&cmd) {
-            Ok(_) => exit(0),
+        Ok((cmd, target)) => match command_runner::run_command(&cmd) {
+            Ok(_) => {
+                error::print_result_location(&target);
+                exit(0)
+            }
             Err(e) => error::print_error(format!("Failed with error: {e:?}")),
         },
         Err(error) => {

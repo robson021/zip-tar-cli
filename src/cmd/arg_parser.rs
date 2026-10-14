@@ -1,9 +1,13 @@
-use crate::cmd::command_builder::{tar_path, unpack_all_in_path, unpack_path, zip_path};
+use crate::cmd::command_builder::{
+    extraction_dir, tar_archive_file, tar_path, unpack_all_in_path, unpack_path, zip_archive_file,
+    zip_path,
+};
 use crate::cmd::command_runner;
-use crate::error::OperationError;
+use crate::error::{OperationError, print_result_location};
 use crate::file::file_metadata;
 use crate::file::file_metadata::FileMetadata;
 use std::error::Error;
+use std::path::PathBuf;
 
 const EXPECTED_NUMER_OF_ARGS: usize = 3;
 
@@ -17,7 +21,16 @@ pub fn parse_and_run(cmd_args: Vec<String>) -> Result<(), Box<dyn Error>> {
 
     let cmd: String = parse_cmd(action, &metadata)?;
     command_runner::run_command(&cmd)?;
+    print_result_location(&resolve_target(action, &metadata)?);
     Ok(())
+}
+
+fn resolve_target(action: &str, metadata: &FileMetadata) -> Result<PathBuf, Box<dyn Error>> {
+    match action {
+        "-z" | "--zip" | "-ze" | "-ez" | "--zip-encrypt" => zip_archive_file(metadata),
+        "-t" | "--tar" => tar_archive_file(metadata),
+        _ => extraction_dir(),
+    }
 }
 
 #[inline(always)]
