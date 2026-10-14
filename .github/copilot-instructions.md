@@ -13,8 +13,7 @@ These are the same build, test, and formatting checks used by `.github/workflows
 
 This is a Rust application that builds and executes shell commands for system `tar` and `zip` utilities rather than handling archive data through Rust libraries.
 
-- `main.rs` checks for `--gui` (delegating to `gui::run_gui()`), falls back to `cmd::arg_parser` if arguments are provided, or starts the interactive terminal menu loop via `input_handler`.
-- `gui.rs` provides an `eframe`/`egui` desktop interface with native file dialogs (`rfd`) for unpacking archives, creating ZIP or TAR archives from files or directories, and configuring password encryption. It reuses `file_metadata`, `command_builder`, and `command_runner`.
+- `main.rs` falls back to `cmd::arg_parser` if arguments are provided, or starts the interactive terminal menu loop via `input_handler`.
 - `cmd/arg_parser.rs` validates the three process arguments (program, action, path), resolves path metadata, and maps action aliases to builder functions.
 - `cmd/command_builder.rs` turns paths and metadata into shell-command strings for extraction, bulk extraction, ZIP, and TAR operations.
 - `cmd/command_runner.rs` executes those strings with `sh -c`; Windows is currently unsupported.
