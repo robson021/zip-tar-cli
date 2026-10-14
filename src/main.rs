@@ -68,7 +68,7 @@ fn handle_menu_option(option: usize) {
                 error::print_result_location(&target);
                 exit(0)
             }
-            Err(e) => error::print_error(format!("Failed with error: {e:?}")),
+            Err(e) => error::print_error(format!("Failed with error: {e}")),
         },
         Err(error) => {
             error::print_error(error);
