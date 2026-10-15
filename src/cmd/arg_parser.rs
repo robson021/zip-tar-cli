@@ -133,13 +133,6 @@ mod tests {
             assert!(cmd.contains("tar -xvf 'resources/test/archives/resources_archive.tar'"));
             assert!(cmd.contains("tar -xvf 'resources/test/archives/resources_archive.zip'"));
             assert!(cmd.contains(" && "));
-
-            // may be collected in different order
-            // assert_eq!(
-            //     "tar -xvf ./resources/test/archives/resources_archive.tar \
-            //     && tar -xvf ./resources/test/archives/resources_archive.zip",
-            //     cmd
-            // );
         }
     }
 }

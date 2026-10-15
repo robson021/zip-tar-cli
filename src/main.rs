@@ -1,16 +1,25 @@
-use crate::cmd::{arg_parser, command_builder, command_runner};
+use crate::cmd::{arg_parser, command_builder, command_runner, version_check};
 use crate::file::file_metadata::FileMetadata;
+use crate::operations::{
+    CREATE_ARCHIVE_FORMAT_ITEMS, CREATE_ARCHIVE_PASSWORD_ITEMS, CreateArchiveFormatItem,
+    CreateArchivePasswordItem, EXTRACT_MENU_ITEMS, ExtractMenuItem, MENU_ITEMS, MainMenuItem,
+};
 use std::env;
 use std::error::Error;
 use std::process::exit;
-use strum_macros::Display;
 
 mod cmd;
 mod error;
 mod file;
 mod input_handler;
+mod operations;
 
 fn main() {
+    if !version_check::check_archive_tools() {
+        error::print_error("Both 'zip' and 'tar' are missing. Install at least one to continue.");
+        exit(1)
+    }
+
     let args: Vec<String> = env::args().collect();
     // dbg!(&args);
 
@@ -30,76 +39,6 @@ fn main() {
         }
     }
 }
-
-#[derive(Copy, Clone, Display)]
-enum MainMenuItem {
-    #[strum(serialize = "Create archive")]
-    CreateArchive,
-    #[strum(serialize = "Extract archive(s)")]
-    ExtractArchives,
-    #[strum(serialize = "Add to existing archive")]
-    AddToExistingArchive,
-    #[strum(serialize = "Exit program")]
-    ExitProgram,
-}
-
-#[derive(Copy, Clone, Display)]
-enum CreateArchivePasswordItem {
-    #[strum(serialize = "No password")]
-    NoPassword,
-    #[strum(serialize = "Use password")]
-    UsePassword,
-    #[strum(serialize = "Back")]
-    Back,
-}
-
-#[derive(Copy, Clone, Display)]
-enum CreateArchiveFormatItem {
-    #[strum(serialize = "ZIP")]
-    Zip,
-    #[strum(serialize = "TAR")]
-    Tar,
-    #[strum(serialize = "Back")]
-    Back,
-}
-
-#[derive(Copy, Clone, Display)]
-enum ExtractMenuItem {
-    #[strum(serialize = "Extract one archive from a path")]
-    ExtractOne,
-    #[strum(serialize = "Extract all archives from a path")]
-    ExtractAllFromPath,
-    #[strum(serialize = "Extract all archives in current directory")]
-    ExtractAllCurrentDir,
-    #[strum(serialize = "Back")]
-    Back,
-}
-
-const MENU_ITEMS: &[MainMenuItem] = &[
-    MainMenuItem::CreateArchive,
-    MainMenuItem::ExtractArchives,
-    MainMenuItem::AddToExistingArchive,
-    MainMenuItem::ExitProgram,
-];
-
-const CREATE_ARCHIVE_PASSWORD_ITEMS: &[CreateArchivePasswordItem] = &[
-    CreateArchivePasswordItem::NoPassword,
-    CreateArchivePasswordItem::UsePassword,
-    CreateArchivePasswordItem::Back,
-];
-
-const CREATE_ARCHIVE_FORMAT_ITEMS: &[CreateArchiveFormatItem] = &[
-    CreateArchiveFormatItem::Zip,
-    CreateArchiveFormatItem::Tar,
-    CreateArchiveFormatItem::Back,
-];
-
-const EXTRACT_MENU_ITEMS: &[ExtractMenuItem] = &[
-    ExtractMenuItem::ExtractOne,
-    ExtractMenuItem::ExtractAllFromPath,
-    ExtractMenuItem::ExtractAllCurrentDir,
-    ExtractMenuItem::Back,
-];
 
 fn handle_menu_option(option: MainMenuItem) {
     let command = match option {
@@ -179,6 +118,9 @@ fn extract_flow() -> Option<Result<command_builder::PlannedCommand, Box<dyn Erro
         Some(ExtractMenuItem::ExtractAllFromPath) => Some(command_builder::extract_all()),
         Some(ExtractMenuItem::ExtractAllCurrentDir) => {
             Some(command_builder::extract_all_in_current_dir())
+        }
+        Some(ExtractMenuItem::ListAllCurrentDir) => {
+            Some(command_builder::list_all_archives_in_current_dir())
         }
         Some(ExtractMenuItem::Back) | None => None,
     }

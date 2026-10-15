@@ -46,6 +46,23 @@ pub fn unpack_path_to_dir(path: &str, target_dir: &Path) -> Result<String, Box<d
 }
 
 pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
+    let archive_paths = find_archive_paths_in_path(path)?;
+
+    println!(
+        "Found {} files to extract: {:?}.",
+        archive_paths.len(),
+        archive_paths
+    );
+
+    let mut commands = Vec::new();
+    for file in archive_paths {
+        let file = unpack_path(&file.to_string_lossy())?;
+        commands.push(file);
+    }
+    Ok(commands.join(" && "))
+}
+
+fn find_archive_paths_in_path(path: &str) -> Result<Vec<PathBuf>, Box<dyn Error>> {
     let metadata = file_metadata::get_file_metadata(path)?;
     let wildcard = metadata.wildcard.as_deref().unwrap_or("*");
     let pattern = Path::new(&metadata.path).join(wildcard);
@@ -62,19 +79,19 @@ pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
                 })
     });
     archive_paths.sort();
+    Ok(archive_paths)
+}
 
-    println!(
-        "Found {} files to extract: {:?}.",
-        archive_paths.len(),
-        archive_paths
-    );
-
-    let mut commands = Vec::new();
-    for file in archive_paths {
-        let file = unpack_path(&file.to_string_lossy())?;
-        commands.push(file);
+fn build_list_archives_command(archive_paths: &[PathBuf]) -> String {
+    if archive_paths.is_empty() {
+        return "printf 'No archives found in current directory.\\n'".to_owned();
     }
-    Ok(commands.join(" && "))
+
+    let escaped_paths: Vec<String> = archive_paths
+        .iter()
+        .map(|path| path.to_string_lossy().replace('\'', "'\\''"))
+        .collect();
+    format!("printf '%s\\n' '{}'", escaped_paths.join("' '"))
 }
 
 pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String, Box<dyn Error>> {
@@ -137,6 +154,14 @@ pub fn extract_all_in_current_dir() -> Result<PlannedCommand, Box<dyn Error>> {
     Ok((unpack_all_in_path(".")?, extraction_dir()?))
 }
 
+pub fn list_all_archives_in_current_dir() -> Result<PlannedCommand, Box<dyn Error>> {
+    let archive_paths = find_archive_paths_in_path(".")?;
+    Ok((
+        build_list_archives_command(&archive_paths),
+        env::current_dir()?,
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -160,6 +185,27 @@ mod tests {
         assert_eq!(
             "zip -P 'my_secret' -r files_archive.zip ./resources/test/files/*",
             cmd
+        );
+    }
+
+    #[test]
+    fn list_archives_command_has_archives_only() {
+        let archives = find_archive_paths_in_path("./resources/test/archives").unwrap();
+        let command = build_list_archives_command(&archives);
+
+        assert!(command.starts_with("printf '%s\\n' "));
+        assert!(command.contains("resources_archive.tar"));
+        assert!(command.contains("resources_archive.zip"));
+        assert!(!command.contains("test1.txt"));
+    }
+
+    #[test]
+    fn list_archives_command_when_empty() {
+        let command = build_list_archives_command(&[]);
+
+        assert_eq!(
+            "printf 'No archives found in current directory.\\n'",
+            command
         );
     }
 }
