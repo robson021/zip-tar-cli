@@ -72,20 +72,11 @@ fn create_archive_flow() -> Option<Result<command_builder::PlannedCommand, Box<d
         Err(error) => return Some(Err(error)),
     };
 
-    let with_password = match input_handler::select_submenu_option(
-        "Password for ZIP archives?",
-        CREATE_ARCHIVE_PASSWORD_ITEMS,
-    ) {
-        Some(CreateArchivePasswordItem::NoPassword) => false,
-        Some(CreateArchivePasswordItem::UsePassword) => true,
-        Some(CreateArchivePasswordItem::Back) | None => return None,
-    };
-
     let result = match input_handler::select_submenu_option(
         "Choose archive format",
         CREATE_ARCHIVE_FORMAT_ITEMS,
     ) {
-        Some(CreateArchiveFormatItem::Zip) => build_zip_command(&metadata, with_password),
+        Some(CreateArchiveFormatItem::Zip) => build_zip_command(&metadata),
         Some(CreateArchiveFormatItem::Tar) => build_tar_command(&metadata),
         Some(CreateArchiveFormatItem::Back) | None => return None,
     };
@@ -95,8 +86,15 @@ fn create_archive_flow() -> Option<Result<command_builder::PlannedCommand, Box<d
 
 fn build_zip_command(
     metadata: &FileMetadata,
-    with_password: bool,
 ) -> Result<command_builder::PlannedCommand, Box<dyn Error>> {
+    let with_password = matches!(
+        input_handler::select_submenu_option(
+            "Password for ZIP archives?",
+            CREATE_ARCHIVE_PASSWORD_ITEMS
+        ),
+        Some(CreateArchivePasswordItem::UsePassword)
+    );
+
     Ok((
         command_builder::zip_path(metadata, with_password)?,
         command_builder::zip_archive_file(metadata)?,

@@ -18,8 +18,6 @@ pub enum CreateArchivePasswordItem {
     NoPassword,
     #[strum(serialize = "Use password")]
     UsePassword,
-    #[strum(serialize = "Back")]
-    Back,
 }
 
 #[derive(Copy, Clone, Display)]
@@ -52,7 +50,6 @@ pub const MENU_ITEMS: &[MainMenuItem] = &[
 pub const CREATE_ARCHIVE_PASSWORD_ITEMS: &[CreateArchivePasswordItem] = &[
     CreateArchivePasswordItem::NoPassword,
     CreateArchivePasswordItem::UsePassword,
-    CreateArchivePasswordItem::Back,
 ];
 
 pub const CREATE_ARCHIVE_FORMAT_ITEMS: &[CreateArchiveFormatItem] = &[
