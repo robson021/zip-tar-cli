@@ -1,7 +1,7 @@
 use crate::error::OperationError;
 use crate::file::string_utils;
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[derive(Debug)]
 pub struct FileMetadata {
@@ -17,12 +17,12 @@ impl FileMetadata {
             false => self.path.clone(),
         }
     }
+
     pub fn to_short_name(&self) -> Result<String> {
         let path = Path::new(&self.path);
-        let name = if self.is_directory {
-            path.file_name()
-        } else {
-            path.file_stem()
+        let name = match self.is_directory {
+            true => path.file_name(),
+            false => path.file_stem(),
         };
         name.and_then(|name| name.to_str())
             .map(str::to_owned)
@@ -31,15 +31,13 @@ impl FileMetadata {
 }
 
 pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata> {
-    let has_wildcard = full_path.contains("*");
-    let mut wildcard_value = None;
-    let path = match has_wildcard {
-        true => {
-            let dir = string_utils::find_dir_of_wildcard_files(full_path)?;
-            wildcard_value = Some(full_path[dir.len() + 1..].to_owned());
-            dir
-        }
-        false => full_path.to_owned(),
+    let has_wildcard = full_path.contains('*');
+    let (path, wildcard_value) = if has_wildcard {
+        let dir = string_utils::find_dir_of_wildcard_files(full_path)?;
+        let wildcard = full_path[dir.len() + 1..].to_owned();
+        (dir, Some(wildcard))
+    } else {
+        (full_path.to_owned(), None)
     };
 
     let p = Path::new(&path);
@@ -59,9 +57,11 @@ pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata> {
 
 #[inline]
 fn get_from_dir(metadata: &FileMetadata) -> String {
-    let path = PathBuf::from(&metadata.path);
     let wildcard = metadata.wildcard.as_deref().unwrap_or("*");
-    path.join(wildcard).to_string_lossy().into_owned()
+    Path::new(&metadata.path)
+        .join(wildcard)
+        .to_string_lossy()
+        .into_owned()
 }
 
 #[cfg(test)]

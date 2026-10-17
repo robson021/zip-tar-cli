@@ -2,30 +2,23 @@ use crate::error::OperationError;
 use anyhow::{Result, anyhow};
 
 pub fn find_dir_of_wildcard_files(path: &str) -> Result<String> {
-    match last_index_of_char(path, '/') {
-        Some(slash_idx) => {
-            let wildcard_idx = last_index_of_char(path, '*').ok_or_else(|| {
-                OperationError::CouldNotFindDirForFileWithWildcard(path.to_owned())
-            })?;
-            if wildcard_idx < slash_idx {
-                return Err(OperationError::InvalidWildcardIndex.into());
-            }
-            Ok(path[..slash_idx].to_owned())
-        }
-        None => Err(OperationError::CouldNotFindDirForFileWithWildcard(path.to_owned()).into()),
+    let slash_idx = path
+        .rfind('/')
+        .ok_or_else(|| OperationError::CouldNotFindDirForFileWithWildcard(path.to_owned()))?;
+    let wildcard_idx = path
+        .rfind('*')
+        .ok_or_else(|| OperationError::CouldNotFindDirForFileWithWildcard(path.to_owned()))?;
+
+    if wildcard_idx < slash_idx {
+        return Err(OperationError::InvalidWildcardIndex.into());
     }
+    Ok(path[..slash_idx].to_owned())
 }
 
 pub fn find_file_extension(path: &str) -> Result<String> {
-    match last_index_of_char(path, '.') {
-        Some(idx) => Ok(path[idx..].to_owned()),
-        None => Err(anyhow!("No extension found.")),
-    }
-}
-
-#[inline]
-fn last_index_of_char(s: &str, to_find: char) -> Option<usize> {
-    s.rfind(to_find)
+    path.rfind('.')
+        .map(|idx| path[idx..].to_owned())
+        .ok_or_else(|| anyhow!("No extension found."))
 }
 
 #[cfg(test)]
@@ -51,14 +44,5 @@ mod tests {
     fn should_find_file_extension() {
         let ext = find_file_extension("/foo/bar/path/file.zip").unwrap();
         assert_eq!(ext, ".zip");
-    }
-
-    #[test]
-    fn should_find_last_index_of_char() {
-        let index = last_index_of_char("/foo/bar/path/example_file.txt", '/').unwrap();
-        assert_eq!(13, index);
-
-        let option = last_index_of_char("/foo/bar/file", '.');
-        assert!(option.is_none());
     }
 }
