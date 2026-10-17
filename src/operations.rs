@@ -34,10 +34,8 @@ pub enum CreateArchiveFormatItem {
 
 #[derive(Copy, Clone, Display)]
 pub enum ExtractMenuItem {
-    #[strum(serialize = "Extract one archive from a path")]
-    ExtractOne,
-    #[strum(serialize = "Extract all archives from a path")]
-    ExtractAllFromPath,
+    #[strum(serialize = "Extract archive(s) from a path")]
+    ExtractFromPath,
     #[strum(serialize = "List all archives in current directory")]
     ListAllCurrentDir,
     #[strum(serialize = "Back")]
@@ -64,8 +62,7 @@ pub const CREATE_ARCHIVE_FORMAT_ITEMS: &[CreateArchiveFormatItem] = &[
 ];
 
 pub const EXTRACT_MENU_ITEMS: &[ExtractMenuItem] = &[
-    ExtractMenuItem::ExtractOne,
-    ExtractMenuItem::ExtractAllFromPath,
+    ExtractMenuItem::ExtractFromPath,
     ExtractMenuItem::ListAllCurrentDir,
     ExtractMenuItem::Back,
 ];

@@ -28,11 +28,6 @@ pub fn tar_archive_file(metadata: &FileMetadata) -> Result<PathBuf, Box<dyn Erro
     Ok(env::current_dir()?.join(format!("{name}.tar")))
 }
 
-pub fn unpack() -> Result<PlannedCommand, Box<dyn Error>> {
-    let file = input_handler::read_path_to_archive()?;
-    Ok((unpack_path(&file)?, extraction_dir()?))
-}
-
 #[inline]
 pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
     unpack_path_to_dir(path, &extraction_dir()?)
@@ -145,9 +140,13 @@ pub fn add_to_exising_archive() -> Result<PlannedCommand, Box<dyn Error>> {
     Ok((cmd, PathBuf::from(archive)))
 }
 
-pub fn extract_all() -> Result<PlannedCommand, Box<dyn Error>> {
-    let path = input_handler::read_path_to_file_or_directory()?.to_string_path();
-    Ok((unpack_all_in_path(&path)?, extraction_dir()?))
+pub fn extract_from_path() -> Result<PlannedCommand, Box<dyn Error>> {
+    let metadata = input_handler::read_path_to_file_or_directory()?;
+    let command = match metadata.is_directory {
+        true => unpack_all_in_path(&metadata.to_string_path())?,
+        false => unpack_path(&metadata.path)?,
+    };
+    Ok((command, extraction_dir()?))
 }
 
 pub fn list_all_archives_in_current_dir() -> Result<PlannedCommand, Box<dyn Error>> {
