@@ -38,8 +38,6 @@ pub enum ExtractMenuItem {
     ExtractOne,
     #[strum(serialize = "Extract all archives from a path")]
     ExtractAllFromPath,
-    #[strum(serialize = "Extract all archives in current directory")]
-    ExtractAllCurrentDir,
     #[strum(serialize = "List all archives in current directory")]
     ListAllCurrentDir,
     #[strum(serialize = "Back")]
@@ -68,7 +66,6 @@ pub const CREATE_ARCHIVE_FORMAT_ITEMS: &[CreateArchiveFormatItem] = &[
 pub const EXTRACT_MENU_ITEMS: &[ExtractMenuItem] = &[
     ExtractMenuItem::ExtractOne,
     ExtractMenuItem::ExtractAllFromPath,
-    ExtractMenuItem::ExtractAllCurrentDir,
     ExtractMenuItem::ListAllCurrentDir,
     ExtractMenuItem::Back,
 ];

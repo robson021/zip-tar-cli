@@ -150,10 +150,6 @@ pub fn extract_all() -> Result<PlannedCommand, Box<dyn Error>> {
     Ok((unpack_all_in_path(&path)?, extraction_dir()?))
 }
 
-pub fn extract_all_in_current_dir() -> Result<PlannedCommand, Box<dyn Error>> {
-    Ok((unpack_all_in_path(".")?, extraction_dir()?))
-}
-
 pub fn list_all_archives_in_current_dir() -> Result<PlannedCommand, Box<dyn Error>> {
     let archive_paths = find_archive_paths_in_path(".")?;
     Ok((

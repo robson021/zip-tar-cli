@@ -116,9 +116,6 @@ fn extract_flow() -> Option<Result<command_builder::PlannedCommand, Box<dyn Erro
     match input_handler::select_submenu_option("Choose extraction mode", EXTRACT_MENU_ITEMS) {
         Some(ExtractMenuItem::ExtractOne) => Some(command_builder::unpack()),
         Some(ExtractMenuItem::ExtractAllFromPath) => Some(command_builder::extract_all()),
-        Some(ExtractMenuItem::ExtractAllCurrentDir) => {
-            Some(command_builder::extract_all_in_current_dir())
-        }
         Some(ExtractMenuItem::ListAllCurrentDir) => {
             Some(command_builder::list_all_archives_in_current_dir())
         }
