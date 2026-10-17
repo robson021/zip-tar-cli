@@ -33,7 +33,6 @@ pub fn unpack_path(path: &str) -> Result<String> {
     unpack_path_to_dir(path, &extraction_dir()?)
 }
 
-#[inline]
 pub fn unpack_path_to_dir(path: &str, target_dir: &Path) -> Result<String> {
     fs::create_dir_all(target_dir)?;
 

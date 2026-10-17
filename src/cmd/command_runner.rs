@@ -20,6 +20,7 @@ pub fn run_command(command: &str) -> Result<()> {
     Ok(())
 }
 
+#[inline]
 fn get_os_specific_cmd_args() -> Result<(&'static str, &'static str)> {
     if cfg!(target_os = "windows") {
         bail!(OperationError::UnsupportedPlatform)

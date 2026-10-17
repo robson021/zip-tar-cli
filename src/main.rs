@@ -1,5 +1,6 @@
 use crate::cmd::{arg_parser, command_builder, command_runner, version_check};
 use crate::file::file_metadata::FileMetadata;
+use crate::input_handler::select_menu_option_with_prompt;
 use crate::operations::{
     CREATE_ARCHIVE_FORMAT_ITEMS, CREATE_ARCHIVE_PASSWORD_ITEMS, CreateArchiveFormatItem,
     CreateArchivePasswordItem, EXTRACT_MENU_ITEMS, ExtractMenuItem, MENU_ITEMS, MainMenuItem,
@@ -30,7 +31,7 @@ fn main() {
         }
     }
     loop {
-        match input_handler::select_menu_option(MENU_ITEMS) {
+        match select_menu_option_with_prompt("Choose an option", MENU_ITEMS) {
             Some(option) => handle_menu_option(option),
             None => {
                 error::print_warning("Operation cancelled by user.");
@@ -66,7 +67,7 @@ fn handle_menu_option(option: MainMenuItem) {
 fn create_archive_flow() -> Result<Option<command_builder::PlannedCommand>> {
     let metadata = input_handler::read_path_to_file_or_directory()?;
 
-    let result = match input_handler::select_submenu_option(
+    let result = match select_menu_option_with_prompt(
         "Choose archive format",
         CREATE_ARCHIVE_FORMAT_ITEMS,
     ) {
@@ -80,10 +81,7 @@ fn create_archive_flow() -> Result<Option<command_builder::PlannedCommand>> {
 
 fn build_zip_command(metadata: &FileMetadata) -> Result<command_builder::PlannedCommand> {
     let with_password = matches!(
-        input_handler::select_submenu_option(
-            "Password for ZIP archives?",
-            CREATE_ARCHIVE_PASSWORD_ITEMS
-        ),
+        select_menu_option_with_prompt("Password for ZIP archives?", CREATE_ARCHIVE_PASSWORD_ITEMS),
         Some(CreateArchivePasswordItem::UsePassword)
     );
 
@@ -101,7 +99,7 @@ fn build_tar_command(metadata: &FileMetadata) -> Result<command_builder::Planned
 }
 
 fn extract_flow() -> Result<Option<command_builder::PlannedCommand>> {
-    match input_handler::select_submenu_option("Choose extraction mode", EXTRACT_MENU_ITEMS) {
+    match select_menu_option_with_prompt("Choose extraction mode", EXTRACT_MENU_ITEMS) {
         Some(ExtractMenuItem::ExtractFromPath) => Ok(Some(command_builder::extract_from_path()?)),
         Some(ExtractMenuItem::ListAllCurrentDir) => {
             Ok(Some(command_builder::list_all_archives_in_current_dir()?))

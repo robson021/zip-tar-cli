@@ -33,7 +33,6 @@ fn resolve_target(action: &str, metadata: &FileMetadata) -> Result<PathBuf> {
     }
 }
 
-#[inline(always)]
 fn validate_number_of_args(number_of_args: usize) -> Result<()> {
     if number_of_args != EXPECTED_NUMER_OF_ARGS {
         let expected = EXPECTED_NUMER_OF_ARGS - 1;

@@ -44,6 +44,7 @@ impl Completion for PathCompletion {
     }
 }
 
+#[inline]
 fn expand_home(path: &str) -> String {
     match (path.strip_prefix('~'), std::env::var("HOME")) {
         (Some(rest), Ok(home)) => format!("{home}{rest}"),
@@ -74,7 +75,7 @@ fn read_string(prompt: &str) -> Result<String> {
     Ok(input.trim().to_owned())
 }
 
-fn select_menu_option_with_prompt<T: Display + Copy>(prompt: &str, items: &[T]) -> Option<T> {
+pub fn select_menu_option_with_prompt<T: Display + Copy>(prompt: &str, items: &[T]) -> Option<T> {
     let selected_index = Select::with_theme(&ColorfulTheme::default())
         .with_prompt(prompt)
         .items(items)
@@ -84,14 +85,6 @@ fn select_menu_option_with_prompt<T: Display + Copy>(prompt: &str, items: &[T]) 
         .flatten()?;
 
     items.get(selected_index).copied()
-}
-
-pub fn select_menu_option<T: Display + Copy>(items: &[T]) -> Option<T> {
-    select_menu_option_with_prompt("Choose an option", items)
-}
-
-pub fn select_submenu_option<T: Display + Copy>(prompt: &str, items: &[T]) -> Option<T> {
-    select_menu_option_with_prompt(prompt, items)
 }
 
 pub fn read_path_to_archive() -> Result<String> {
