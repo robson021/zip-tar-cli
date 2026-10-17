@@ -1,29 +1,28 @@
 use crate::error::OperationError;
-use std::error::Error;
+use anyhow::{Result, bail};
 use std::process::Command;
 
 const ZIP_NOTHING_TO_DO: i32 = 12;
 
-pub fn run_command(command: &str) -> Result<(), Box<dyn Error>> {
+pub fn run_command(command: &str) -> Result<()> {
     dbg!("Running command: {}", command);
     let (arg1, arg2) = get_os_specific_cmd_args()?;
     let mut cmd = Command::new(arg1).arg(arg2).arg(command).spawn()?;
     let status = cmd.wait()?;
     if !status.success() {
         if status.code() == Some(ZIP_NOTHING_TO_DO) {
-            return Err(OperationError::NothingToZip.into());
+            bail!(OperationError::NothingToZip);
         }
-        return Err(OperationError::FailedToRunCommand(format!(
+        bail!(OperationError::FailedToRunCommand(format!(
             "Command '{command}' failed with status: {status}"
-        ))
-        .into());
+        )));
     }
     Ok(())
 }
 
-fn get_os_specific_cmd_args() -> Result<(&'static str, &'static str), OperationError> {
+fn get_os_specific_cmd_args() -> Result<(&'static str, &'static str)> {
     if cfg!(target_os = "windows") {
-        Err(OperationError::UnsupportedPlatform)
+        bail!(OperationError::UnsupportedPlatform)
     } else {
         Ok(("sh", "-c"))
     }

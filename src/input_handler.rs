@@ -1,9 +1,9 @@
 use crate::error::OperationError;
 use crate::file::file_metadata;
 use crate::file::file_metadata::FileMetadata;
+use anyhow::Result;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::{Completion, Input, Select};
-use std::error::Error;
 use std::fmt::Display;
 use std::fs;
 use std::path::MAIN_SEPARATOR;
@@ -66,7 +66,7 @@ fn common_prefix(items: &[String]) -> Option<String> {
     Some(first[..end].to_owned())
 }
 
-fn read_string(prompt: &str) -> Result<String, Box<dyn Error>> {
+fn read_string(prompt: &str) -> Result<String> {
     let input: String = Input::with_theme(&ColorfulTheme::default())
         .with_prompt(format!("{prompt} (Tab to autocomplete)"))
         .completion_with(&PathCompletion)
@@ -94,16 +94,16 @@ pub fn select_submenu_option<T: Display + Copy>(prompt: &str, items: &[T]) -> Op
     select_menu_option_with_prompt(prompt, items)
 }
 
-pub fn read_path_to_archive() -> Result<String, Box<dyn Error>> {
+pub fn read_path_to_archive() -> Result<String> {
     let path = read_string("Archive path (e.g. /some/directory/my_file.zip)")?;
     let file_metadata = file_metadata::get_file_metadata(&path)?;
     match file_metadata.is_directory {
         false => Ok(file_metadata.path),
-        true => Err(Box::new(OperationError::ArchiveIsDirectory)),
+        true => Err(OperationError::ArchiveIsDirectory.into()),
     }
 }
 
-pub fn read_path_to_file_or_directory() -> Result<FileMetadata, Box<dyn Error>> {
+pub fn read_path_to_file_or_directory() -> Result<FileMetadata> {
     let path = read_string("File or directory path (e.g. /some/directory/my_file.png)")?;
     file_metadata::get_file_metadata(&path)
 }

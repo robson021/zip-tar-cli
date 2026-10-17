@@ -4,8 +4,8 @@ use crate::operations::{
     CREATE_ARCHIVE_FORMAT_ITEMS, CREATE_ARCHIVE_PASSWORD_ITEMS, CreateArchiveFormatItem,
     CreateArchivePasswordItem, EXTRACT_MENU_ITEMS, ExtractMenuItem, MENU_ITEMS, MainMenuItem,
 };
+use anyhow::Result;
 use std::env;
-use std::error::Error;
 use std::process::exit;
 
 mod cmd;
@@ -63,7 +63,7 @@ fn handle_menu_option(option: MainMenuItem) {
     }
 }
 
-fn create_archive_flow() -> Result<Option<command_builder::PlannedCommand>, Box<dyn Error>> {
+fn create_archive_flow() -> Result<Option<command_builder::PlannedCommand>> {
     let metadata = input_handler::read_path_to_file_or_directory()?;
 
     let result = match input_handler::select_submenu_option(
@@ -78,9 +78,7 @@ fn create_archive_flow() -> Result<Option<command_builder::PlannedCommand>, Box<
     Ok(Some(result?))
 }
 
-fn build_zip_command(
-    metadata: &FileMetadata,
-) -> Result<command_builder::PlannedCommand, Box<dyn Error>> {
+fn build_zip_command(metadata: &FileMetadata) -> Result<command_builder::PlannedCommand> {
     let with_password = matches!(
         input_handler::select_submenu_option(
             "Password for ZIP archives?",
@@ -95,16 +93,14 @@ fn build_zip_command(
     ))
 }
 
-fn build_tar_command(
-    metadata: &FileMetadata,
-) -> Result<command_builder::PlannedCommand, Box<dyn Error>> {
+fn build_tar_command(metadata: &FileMetadata) -> Result<command_builder::PlannedCommand> {
     Ok((
         command_builder::tar_path(metadata)?,
         command_builder::tar_archive_file(metadata)?,
     ))
 }
 
-fn extract_flow() -> Result<Option<command_builder::PlannedCommand>, Box<dyn Error>> {
+fn extract_flow() -> Result<Option<command_builder::PlannedCommand>> {
     match input_handler::select_submenu_option("Choose extraction mode", EXTRACT_MENU_ITEMS) {
         Some(ExtractMenuItem::ExtractFromPath) => Ok(Some(command_builder::extract_from_path()?)),
         Some(ExtractMenuItem::ListAllCurrentDir) => {

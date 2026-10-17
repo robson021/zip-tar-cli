@@ -1,9 +1,9 @@
 use crate::file::file_metadata::FileMetadata;
 use crate::file::{file_metadata, string_utils};
 use crate::input_handler;
+use anyhow::Result;
 use glob::glob;
 use std::env;
-use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -14,33 +14,33 @@ const VALID_ARCHIVE_FORMATS: &[&str] = &[
 
 pub type PlannedCommand = (String, PathBuf);
 
-pub fn extraction_dir() -> Result<PathBuf, Box<dyn Error>> {
+pub fn extraction_dir() -> Result<PathBuf> {
     Ok(env::current_dir()?.join("extracted_files"))
 }
 
-pub fn zip_archive_file(metadata: &FileMetadata) -> Result<PathBuf, Box<dyn Error>> {
+pub fn zip_archive_file(metadata: &FileMetadata) -> Result<PathBuf> {
     let name = get_clean_archive_name(&metadata.to_short_name()?);
     Ok(env::current_dir()?.join(format!("{name}.zip")))
 }
 
-pub fn tar_archive_file(metadata: &FileMetadata) -> Result<PathBuf, Box<dyn Error>> {
+pub fn tar_archive_file(metadata: &FileMetadata) -> Result<PathBuf> {
     let name = get_clean_archive_name(&metadata.to_short_name()?);
     Ok(env::current_dir()?.join(format!("{name}.tar")))
 }
 
 #[inline]
-pub fn unpack_path(path: &str) -> Result<String, Box<dyn Error>> {
+pub fn unpack_path(path: &str) -> Result<String> {
     unpack_path_to_dir(path, &extraction_dir()?)
 }
 
 #[inline]
-pub fn unpack_path_to_dir(path: &str, target_dir: &Path) -> Result<String, Box<dyn Error>> {
+pub fn unpack_path_to_dir(path: &str, target_dir: &Path) -> Result<String> {
     fs::create_dir_all(target_dir)?;
 
     Ok(format!("tar -xvf '{path}' -C '{}'", target_dir.display()))
 }
 
-pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
+pub fn unpack_all_in_path(path: &str) -> Result<String> {
     let archive_paths = find_archive_paths_in_path(path)?;
 
     println!(
@@ -57,11 +57,12 @@ pub fn unpack_all_in_path(path: &str) -> Result<String, Box<dyn Error>> {
     Ok(commands.join(" && "))
 }
 
-fn find_archive_paths_in_path(path: &str) -> Result<Vec<PathBuf>, Box<dyn Error>> {
+fn find_archive_paths_in_path(path: &str) -> Result<Vec<PathBuf>> {
     let metadata = file_metadata::get_file_metadata(path)?;
     let wildcard = metadata.wildcard.as_deref().unwrap_or("*");
     let pattern = Path::new(&metadata.path).join(wildcard);
-    let mut archive_paths = glob(&pattern.to_string_lossy())?.collect::<Result<Vec<_>, _>>()?;
+    let mut archive_paths =
+        glob(&pattern.to_string_lossy())?.collect::<std::result::Result<Vec<_>, _>>()?;
     archive_paths.retain(|path| {
         path.is_file()
             && path
@@ -89,7 +90,7 @@ fn build_list_archives_command(archive_paths: &[PathBuf]) -> String {
     format!("printf '%s\\n' '{}'", escaped_paths.join("' '"))
 }
 
-pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String, Box<dyn Error>> {
+pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String> {
     let encryption = match with_password {
         true => Some(""),
         false => None,
@@ -97,10 +98,7 @@ pub fn zip_path(metadata: &FileMetadata, with_password: bool) -> Result<String, 
     zip_path_with_password(metadata, encryption)
 }
 
-pub fn zip_path_with_password(
-    metadata: &FileMetadata,
-    password: Option<&str>,
-) -> Result<String, Box<dyn Error>> {
+pub fn zip_path_with_password(metadata: &FileMetadata, password: Option<&str>) -> Result<String> {
     let destination_archive = get_clean_archive_name(&metadata.to_short_name()?);
     let path_to_files = metadata.to_string_path();
     let cmd = match password {
@@ -114,7 +112,7 @@ pub fn zip_path_with_password(
     Ok(cmd)
 }
 
-pub fn tar_path(metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
+pub fn tar_path(metadata: &FileMetadata) -> Result<String> {
     let destination_archive = get_clean_archive_name(&metadata.to_short_name()?);
     let path = metadata.to_string_path();
     let cmd = format!("tar -cf {destination_archive}.tar {path}");
@@ -127,7 +125,7 @@ fn get_clean_archive_name(short_name: &str) -> String {
     format!("{short_name}_archive")
 }
 
-pub fn add_to_exising_archive() -> Result<PlannedCommand, Box<dyn Error>> {
+pub fn add_to_exising_archive() -> Result<PlannedCommand> {
     print!("Let's find existing archive. ");
     let archive = input_handler::read_path_to_archive()?;
     let ext = string_utils::find_file_extension(&archive)?;
@@ -140,7 +138,7 @@ pub fn add_to_exising_archive() -> Result<PlannedCommand, Box<dyn Error>> {
     Ok((cmd, PathBuf::from(archive)))
 }
 
-pub fn extract_from_path() -> Result<PlannedCommand, Box<dyn Error>> {
+pub fn extract_from_path() -> Result<PlannedCommand> {
     let metadata = input_handler::read_path_to_file_or_directory()?;
     let command = match metadata.is_directory {
         true => unpack_all_in_path(&metadata.to_string_path())?,
@@ -149,7 +147,7 @@ pub fn extract_from_path() -> Result<PlannedCommand, Box<dyn Error>> {
     Ok((command, extraction_dir()?))
 }
 
-pub fn list_all_archives_in_current_dir() -> Result<PlannedCommand, Box<dyn Error>> {
+pub fn list_all_archives_in_current_dir() -> Result<PlannedCommand> {
     let archive_paths = find_archive_paths_in_path(".")?;
     Ok((
         build_list_archives_command(&archive_paths),

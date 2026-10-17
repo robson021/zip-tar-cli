@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.104"
 console = "0.16.6"
 dialoguer = { version = "0.12.0", features = ["completion"] }
 glob = { version = "0.3", default-features = false }

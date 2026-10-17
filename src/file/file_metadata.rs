@@ -1,6 +1,6 @@
 use crate::error::OperationError;
 use crate::file::string_utils;
-use std::error::Error;
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
@@ -17,7 +17,7 @@ impl FileMetadata {
             false => self.path.clone(),
         }
     }
-    pub fn to_short_name(&self) -> Result<String, Box<dyn Error>> {
+    pub fn to_short_name(&self) -> Result<String> {
         let path = Path::new(&self.path);
         let name = if self.is_directory {
             path.file_name()
@@ -30,7 +30,7 @@ impl FileMetadata {
     }
 }
 
-pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata, Box<dyn Error>> {
+pub fn get_file_metadata(full_path: &str) -> Result<FileMetadata> {
     let has_wildcard = full_path.contains("*");
     let mut wildcard_value = None;
     let path = match has_wildcard {

@@ -1,7 +1,7 @@
 use crate::error::OperationError;
-use std::error::Error;
+use anyhow::{Result, anyhow};
 
-pub fn find_dir_of_wildcard_files(path: &str) -> Result<String, Box<dyn Error>> {
+pub fn find_dir_of_wildcard_files(path: &str) -> Result<String> {
     match last_index_of_char(path, '/') {
         Some(slash_idx) => {
             let wildcard_idx = last_index_of_char(path, '*').ok_or_else(|| {
@@ -16,10 +16,10 @@ pub fn find_dir_of_wildcard_files(path: &str) -> Result<String, Box<dyn Error>> 
     }
 }
 
-pub fn find_file_extension(path: &str) -> Result<String, &'static str> {
+pub fn find_file_extension(path: &str) -> Result<String> {
     match last_index_of_char(path, '.') {
         Some(idx) => Ok(path[idx..].to_owned()),
-        None => Err("No extension found."),
+        None => Err(anyhow!("No extension found.")),
     }
 }
 

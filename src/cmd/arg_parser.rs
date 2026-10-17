@@ -6,12 +6,12 @@ use crate::cmd::command_runner;
 use crate::error::{OperationError, print_result_location};
 use crate::file::file_metadata;
 use crate::file::file_metadata::FileMetadata;
-use std::error::Error;
+use anyhow::Result;
 use std::path::PathBuf;
 
 const EXPECTED_NUMER_OF_ARGS: usize = 3;
 
-pub fn parse_and_run(cmd_args: Vec<String>) -> Result<(), Box<dyn Error>> {
+pub fn parse_and_run(cmd_args: Vec<String>) -> Result<()> {
     validate_number_of_args(cmd_args.len())?;
 
     let action = &cmd_args[1];
@@ -25,7 +25,7 @@ pub fn parse_and_run(cmd_args: Vec<String>) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn resolve_target(action: &str, metadata: &FileMetadata) -> Result<PathBuf, Box<dyn Error>> {
+fn resolve_target(action: &str, metadata: &FileMetadata) -> Result<PathBuf> {
     match action {
         "-z" | "--zip" | "-ze" | "-ez" | "--zip-encrypt" => zip_archive_file(metadata),
         "-t" | "--tar" => tar_archive_file(metadata),
@@ -34,7 +34,7 @@ fn resolve_target(action: &str, metadata: &FileMetadata) -> Result<PathBuf, Box<
 }
 
 #[inline(always)]
-fn validate_number_of_args(number_of_args: usize) -> Result<(), Box<dyn Error>> {
+fn validate_number_of_args(number_of_args: usize) -> Result<()> {
     if number_of_args != EXPECTED_NUMER_OF_ARGS {
         let expected = EXPECTED_NUMER_OF_ARGS - 1;
         let actual = number_of_args - 1;
@@ -44,7 +44,7 @@ fn validate_number_of_args(number_of_args: usize) -> Result<(), Box<dyn Error>> 
     Ok(())
 }
 
-fn parse_cmd(action: &str, metadata: &FileMetadata) -> Result<String, Box<dyn Error>> {
+fn parse_cmd(action: &str, metadata: &FileMetadata) -> Result<String> {
     let cmd = match action {
         "-x" | "-u" | "--extract" | "-d" | "--decompress" => unpack_path(&metadata.path)?,
         "-xa" | "-ax" | "--extract-all" => unpack_all_in_path(&metadata.path)?,
