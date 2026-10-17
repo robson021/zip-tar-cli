@@ -44,33 +44,27 @@ fn handle_menu_option(option: MainMenuItem) {
     let command = match option {
         MainMenuItem::CreateArchive => create_archive_flow(),
         MainMenuItem::ExtractArchives => extract_flow(),
-        MainMenuItem::AddToExistingArchive => Some(command_builder::add_to_exising_archive()),
+        MainMenuItem::AddToExistingArchive => command_builder::add_to_exising_archive().map(Some),
         MainMenuItem::ExitProgram => exit(0),
     };
 
-    let Some(command) = command else {
-        return;
-    };
-
     match command {
-        Ok((cmd, target)) => match command_runner::run_command(&cmd) {
+        Ok(Some((cmd, target))) => match command_runner::run_command(&cmd) {
             Ok(_) => {
                 error::print_result_location(&target);
                 exit(0)
             }
             Err(e) => error::print_error(format!("Failed with error: {e}")),
         },
+        Ok(None) => (),
         Err(error) => {
             error::print_error(error);
         }
     }
 }
 
-fn create_archive_flow() -> Option<Result<command_builder::PlannedCommand, Box<dyn Error>>> {
-    let metadata = match input_handler::read_path_to_file_or_directory() {
-        Ok(metadata) => metadata,
-        Err(error) => return Some(Err(error)),
-    };
+fn create_archive_flow() -> Result<Option<command_builder::PlannedCommand>, Box<dyn Error>> {
+    let metadata = input_handler::read_path_to_file_or_directory()?;
 
     let result = match input_handler::select_submenu_option(
         "Choose archive format",
@@ -78,10 +72,10 @@ fn create_archive_flow() -> Option<Result<command_builder::PlannedCommand, Box<d
     ) {
         Some(CreateArchiveFormatItem::Zip) => build_zip_command(&metadata),
         Some(CreateArchiveFormatItem::Tar) => build_tar_command(&metadata),
-        Some(CreateArchiveFormatItem::Back) | None => return None,
+        Some(CreateArchiveFormatItem::Back) | None => return Ok(None),
     };
 
-    Some(result)
+    Ok(Some(result?))
 }
 
 fn build_zip_command(
@@ -110,12 +104,12 @@ fn build_tar_command(
     ))
 }
 
-fn extract_flow() -> Option<Result<command_builder::PlannedCommand, Box<dyn Error>>> {
+fn extract_flow() -> Result<Option<command_builder::PlannedCommand>, Box<dyn Error>> {
     match input_handler::select_submenu_option("Choose extraction mode", EXTRACT_MENU_ITEMS) {
-        Some(ExtractMenuItem::ExtractFromPath) => Some(command_builder::extract_from_path()),
+        Some(ExtractMenuItem::ExtractFromPath) => Ok(Some(command_builder::extract_from_path()?)),
         Some(ExtractMenuItem::ListAllCurrentDir) => {
-            Some(command_builder::list_all_archives_in_current_dir())
+            Ok(Some(command_builder::list_all_archives_in_current_dir()?))
         }
-        Some(ExtractMenuItem::Back) | None => None,
+        Some(ExtractMenuItem::Back) | None => Ok(None),
     }
 }
